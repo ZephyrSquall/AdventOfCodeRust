@@ -1,0 +1,31 @@
+[package]
+name = "advent-of-code-rust"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+atoi = "2.0.0"
+itertools = "0.13.0"
+rustc-hash = "2.0.0"
+
+[lints.clippy]
+pedantic = { level = "warn", priority = -1 }
+clone_on_ref_ptr = "warn"
+collapsible_else_if = "allow"
+dbg_macro = "warn"
+empty_enum_variants_with_brackets = "warn"
+empty_structs_with_brackets = "warn"
+if_then_some_else_none = "warn"
+infinite_loop = "warn"
+mod_module_files = "warn"
+multiple_inherent_impl = "warn"
+print_stderr = "warn"
+print_stdout = "warn"
+redundant_type_annotations = "warn"
+ref_patterns = "warn"
+string_add = "warn"
+tests_outside_test_module = "warn"
+too_many_lines = "allow"
+unseparated_literal_suffix = "warn"
+unwrap_used = "warn"
+use_debug = "warn"
