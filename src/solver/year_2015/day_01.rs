@@ -4,7 +4,7 @@ pub const SOLVER: Solver = Solver {
     year: 2015,
     day: 1,
     title: "Not Quite Lisp",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
@@ -17,6 +17,24 @@ fn solve_1(input: &str) -> Solution {
         }
     }
     Solution::I32(floor)
+}
+
+fn solve_2(input: &str) -> Solution {
+    let mut floor = 0;
+    let mut first_basement_entry_position = 0;
+    for (index, bracket) in input.chars().enumerate() {
+        if bracket == '(' {
+            floor += 1;
+        } else {
+            floor -= 1;
+        }
+
+        if floor == -1 {
+            first_basement_entry_position = index + 1;
+            break;
+        }
+    }
+    Solution::USize(first_basement_entry_position)
 }
 
 #[cfg(test)]
@@ -58,5 +76,14 @@ mod test {
     #[test]
     fn example1_9() {
         assert_eq!(solve_1(")())())"), Solution::I8(-3));
+    }
+
+    #[test]
+    fn example2_1() {
+        assert_eq!(solve_2(")"), Solution::U8(1));
+    }
+    #[test]
+    fn example2_2() {
+        assert_eq!(solve_2("()())"), Solution::U8(5));
     }
 }
