@@ -1,4 +1,4 @@
-use crate::solver::SOLVERS;
+use crate::solver::{Solver, SOLVERS};
 use std::fs;
 use std::time::Instant;
 
@@ -8,6 +8,11 @@ const PUZZLE_TITLE: &str = "Puzzle";
 const PART_TITLE: &str = "Part";
 const SOLUTION_TITLE: &str = "Solution";
 const TIMING_TITLE: &str = "Time (ms)";
+
+pub struct PuzzleDate {
+    pub year: u16,
+    pub day: Option<u8>,
+}
 
 struct MaxLength {
     year: usize,
@@ -26,13 +31,29 @@ struct SolutionFormat {
     times: Vec<String>,
 }
 
-pub fn run(config: &[u8]) {
+pub fn run(config: &[PuzzleDate]) {
     let (solution_formats, max_length) = run_solvers(config);
 
     print_results_table(&solution_formats, &max_length);
 }
 
-fn run_solvers(config: &[u8]) -> (Vec<SolutionFormat>, MaxLength) {
+fn does_match_date(solver: &Solver, config: &[PuzzleDate]) -> bool {
+    if config.is_empty() {
+        return true;
+    }
+    for puzzle_date in config {
+        if let Some(day) = puzzle_date.day {
+            if solver.year == puzzle_date.year && solver.day == day {
+                return true;
+            }
+        } else if solver.year == puzzle_date.year {
+            return true;
+        }
+    }
+    false
+}
+
+fn run_solvers(config: &[PuzzleDate]) -> (Vec<SolutionFormat>, MaxLength) {
     let mut solution_formats = Vec::with_capacity(SOLVERS.len());
     let mut max_length = MaxLength {
         year: YEAR_TITLE.chars().count(),
@@ -46,7 +67,7 @@ fn run_solvers(config: &[u8]) -> (Vec<SolutionFormat>, MaxLength) {
     for solver in SOLVERS {
         // Only run the solver if the config specified to run this solver or the config didn't
         // specify any particular solvers.
-        if config.is_empty() || config.contains(&solver.day) {
+        if does_match_date(&solver, config) {
             // Fetch the input strings for each puzzle from the text files under puzzle_inputs.
             // "{:02}" left-pads the day number with a 0 if needed so the width of the number is two
             // (text files for the first 9 days are prefixed with a 0 e.g. "01.txt" so it's sorted
