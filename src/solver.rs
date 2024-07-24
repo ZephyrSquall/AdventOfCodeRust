@@ -1,6 +1,7 @@
 use std::fmt;
 
 pub struct Solver<'a> {
+    pub year: u16,
     pub day: u8,
     pub title: &'a str,
     pub part_solvers: &'a [fn(input: &str) -> Solution],
@@ -57,56 +58,32 @@ impl<'a> PartialEq for Solution<'a> {
     }
 }
 
-pub mod day_01;
-pub mod day_02;
-pub mod day_03;
-pub mod day_04;
-pub mod day_05;
-pub mod day_06;
-pub mod day_07;
-pub mod day_08;
-pub mod day_09;
-pub mod day_10;
-pub mod day_11;
-pub mod day_12;
-pub mod day_13;
-pub mod day_14;
-pub mod day_15;
-pub mod day_16;
-pub mod day_17;
-pub mod day_18;
-pub mod day_19;
-pub mod day_20;
-pub mod day_21;
-pub mod day_22;
-pub mod day_23;
-pub mod day_24;
-pub mod day_25;
+pub mod year_2017;
 
 pub const SOLVERS: [Solver; 25] = [
-    day_01::SOLVER,
-    day_02::SOLVER,
-    day_03::SOLVER,
-    day_04::SOLVER,
-    day_05::SOLVER,
-    day_06::SOLVER,
-    day_07::SOLVER,
-    day_08::SOLVER,
-    day_09::SOLVER,
-    day_10::SOLVER,
-    day_11::SOLVER,
-    day_12::SOLVER,
-    day_13::SOLVER,
-    day_14::SOLVER,
-    day_15::SOLVER,
-    day_16::SOLVER,
-    day_17::SOLVER,
-    day_18::SOLVER,
-    day_19::SOLVER,
-    day_20::SOLVER,
-    day_21::SOLVER,
-    day_22::SOLVER,
-    day_23::SOLVER,
-    day_24::SOLVER,
-    day_25::SOLVER,
+    year_2017::day_01::SOLVER,
+    year_2017::day_02::SOLVER,
+    year_2017::day_03::SOLVER,
+    year_2017::day_04::SOLVER,
+    year_2017::day_05::SOLVER,
+    year_2017::day_06::SOLVER,
+    year_2017::day_07::SOLVER,
+    year_2017::day_08::SOLVER,
+    year_2017::day_09::SOLVER,
+    year_2017::day_10::SOLVER,
+    year_2017::day_11::SOLVER,
+    year_2017::day_12::SOLVER,
+    year_2017::day_13::SOLVER,
+    year_2017::day_14::SOLVER,
+    year_2017::day_15::SOLVER,
+    year_2017::day_16::SOLVER,
+    year_2017::day_17::SOLVER,
+    year_2017::day_18::SOLVER,
+    year_2017::day_19::SOLVER,
+    year_2017::day_20::SOLVER,
+    year_2017::day_21::SOLVER,
+    year_2017::day_22::SOLVER,
+    year_2017::day_23::SOLVER,
+    year_2017::day_24::SOLVER,
+    year_2017::day_25::SOLVER,
 ];

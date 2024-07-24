@@ -1,7 +1,8 @@
-use super::{Solution, Solver};
+use crate::solver::{Solution, Solver};
 use std::fmt::Write;
 
 pub const SOLVER: Solver = Solver {
+    year: 2017,
     day: 10,
     title: "Knot Hash",
     part_solvers: &[solve_1, solve_2],

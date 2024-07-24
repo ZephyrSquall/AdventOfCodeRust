@@ -1,6 +1,7 @@
-use super::{Solution, Solver};
+use crate::solver::{Solution, Solver};
 
 pub const SOLVER: Solver = Solver {
+    year: 2017,
     day: 11,
     title: "Hex Ed",
     part_solvers: &[solve_1, solve_2],

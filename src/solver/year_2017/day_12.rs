@@ -1,7 +1,8 @@
-use super::{Solution, Solver};
+use crate::solver::{Solution, Solver};
 use rustc_hash::FxHashMap;
 
 pub const SOLVER: Solver = Solver {
+    year: 2017,
     day: 12,
     title: "Digital Plumber",
     part_solvers: &[solve_1, solve_2],

@@ -1,7 +1,8 @@
-use super::{Solution, Solver};
+use crate::solver::{Solution, Solver};
 use itertools::Itertools;
 
 pub const SOLVER: Solver = Solver {
+    year: 2017,
     day: 2,
     title: "Corruption Checksum",
     part_solvers: &[solve_1, solve_2],

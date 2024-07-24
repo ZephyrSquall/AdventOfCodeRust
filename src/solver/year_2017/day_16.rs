@@ -1,7 +1,8 @@
-use super::{Solution, Solver};
+use crate::solver::{Solution, Solver};
 use std::collections::VecDeque;
 
 pub const SOLVER: Solver = Solver {
+    year: 2017,
     day: 16,
     title: "Permutation Promenade",
     part_solvers: &[solve_1, solve_2],

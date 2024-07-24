@@ -1,8 +1,9 @@
-use super::{Solution, Solver};
+use crate::solver::{Solution, Solver};
 use rustc_hash::FxHashMap;
 use std::{cell::RefCell, collections::VecDeque, rc::Rc, str::SplitWhitespace};
 
 pub const SOLVER: Solver = Solver {
+    year: 2017,
     day: 18,
     title: "Duet",
     part_solvers: &[solve_1, solve_2],

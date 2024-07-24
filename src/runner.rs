@@ -2,6 +2,7 @@ use crate::solver::SOLVERS;
 use std::fs;
 use std::time::Instant;
 
+const YEAR_TITLE: &str = "Year";
 const DAY_TITLE: &str = "Day";
 const PUZZLE_TITLE: &str = "Puzzle";
 const PART_TITLE: &str = "Part";
@@ -9,6 +10,7 @@ const SOLUTION_TITLE: &str = "Solution";
 const TIMING_TITLE: &str = "Time (ms)";
 
 struct MaxLength {
+    year: usize,
     day: usize,
     puzzle: usize,
     part: usize,
@@ -17,6 +19,7 @@ struct MaxLength {
 }
 
 struct SolutionFormat {
+    year: String,
     day: String,
     title: String,
     solutions: Vec<String>,
@@ -32,11 +35,12 @@ pub fn run(config: &[u8]) {
 fn run_solvers(config: &[u8]) -> (Vec<SolutionFormat>, MaxLength) {
     let mut solution_formats = Vec::with_capacity(SOLVERS.len());
     let mut max_length = MaxLength {
-        day: DAY_TITLE.len(),
-        puzzle: PUZZLE_TITLE.len(),
-        part: PART_TITLE.len(),
-        solution: SOLUTION_TITLE.len(),
-        timing: TIMING_TITLE.len(),
+        year: YEAR_TITLE.chars().count(),
+        day: DAY_TITLE.chars().count(),
+        puzzle: PUZZLE_TITLE.chars().count(),
+        part: PART_TITLE.chars().count(),
+        solution: SOLUTION_TITLE.chars().count(),
+        timing: TIMING_TITLE.chars().count(),
     };
 
     for solver in SOLVERS {
@@ -47,7 +51,7 @@ fn run_solvers(config: &[u8]) -> (Vec<SolutionFormat>, MaxLength) {
             // "{:02}" left-pads the day number with a 0 if needed so the width of the number is two
             // (text files for the first 9 days are prefixed with a 0 e.g. "01.txt" so it's sorted
             // properly by file systems).
-            let file_path = format!("puzzle_inputs/{:02}.txt", solver.day);
+            let file_path = format!("puzzle_inputs/{}/{:02}.txt", solver.year, solver.day);
             let input = fs::read_to_string(&file_path).expect("Error reading file");
 
             let mut solutions = Vec::with_capacity(2);
@@ -70,11 +74,13 @@ fn run_solvers(config: &[u8]) -> (Vec<SolutionFormat>, MaxLength) {
 
                 // Check if the length of any data to be displayed exceeds the current maximum
                 // length. If so, update the maximum length.
-                if solution.len() > max_length.solution {
-                    max_length.solution = solution.len();
+                let solution_chars = solution.chars().count();
+                if solution_chars > max_length.solution {
+                    max_length.solution = solution_chars;
                 }
-                if time.len() > max_length.timing {
-                    max_length.timing = time.len();
+                let time_chars = time.chars().count();
+                if time_chars > max_length.timing {
+                    max_length.timing = time_chars;
                 }
 
                 solutions.push(solution);
@@ -84,6 +90,7 @@ fn run_solvers(config: &[u8]) -> (Vec<SolutionFormat>, MaxLength) {
             // Store the string representation of all information to be printed in the results
             // table.
             let solution_format = SolutionFormat {
+                year: solver.year.to_string(),
                 day: solver.day.to_string(),
                 title: solver.title.to_string(),
                 solutions,
@@ -92,11 +99,17 @@ fn run_solvers(config: &[u8]) -> (Vec<SolutionFormat>, MaxLength) {
 
             // Check if the length of any data to be displayed exceeds the current maximum length.
             // If so, update the maximum length.
-            if solution_format.day.len() > max_length.day {
-                max_length.day = solution_format.day.len();
+            let year_chars = solution_format.year.chars().count();
+            if year_chars > max_length.year {
+                max_length.year = year_chars;
             }
-            if solution_format.title.len() > max_length.puzzle {
-                max_length.puzzle = solution_format.title.len();
+            let day_chars = solution_format.day.chars().count();
+            if day_chars > max_length.day {
+                max_length.day = day_chars;
+            }
+            let title_chars = solution_format.title.chars().count();
+            if title_chars > max_length.puzzle {
+                max_length.puzzle = title_chars;
             }
 
             solution_formats.push(solution_format);
@@ -112,8 +125,9 @@ fn run_solvers(config: &[u8]) -> (Vec<SolutionFormat>, MaxLength) {
 fn print_results_table(solution_formats: &Vec<SolutionFormat>, max_length: &MaxLength) {
     // Generate table header
     println!(
-        "╔═{empty:═<day_width$}═╤═{empty:═<puzzle_width$}═╤═{empty:═<part_width$}═╤═{empty:═<solution_width$}═╤═{empty:═<timing_width$}═╗",
+        "╔═{empty:═<year_width$}═╤═{empty:═<day_width$}═╤═{empty:═<puzzle_width$}═╤═{empty:═<part_width$}═╤═{empty:═<solution_width$}═╤═{empty:═<timing_width$}═╗",
         empty = "",
+        year_width = max_length.year,
         day_width = max_length.day,
         puzzle_width = max_length.puzzle,
         part_width = max_length.part,
@@ -121,7 +135,8 @@ fn print_results_table(solution_formats: &Vec<SolutionFormat>, max_length: &MaxL
         timing_width = max_length.timing
     );
     println!(
-        "║ {DAY_TITLE:day_width$} │ {PUZZLE_TITLE:puzzle_width$} │ {PART_TITLE:part_width$} │ {SOLUTION_TITLE:solution_width$} │ {TIMING_TITLE:timing_width$} ║",
+        "║ {YEAR_TITLE:year_width$} │ {DAY_TITLE:day_width$} │ {PUZZLE_TITLE:puzzle_width$} │ {PART_TITLE:part_width$} │ {SOLUTION_TITLE:solution_width$} │ {TIMING_TITLE:timing_width$} ║",
+        year_width = max_length.year,
         day_width = max_length.day,
         puzzle_width = max_length.puzzle,
         part_width = max_length.part,
@@ -129,8 +144,9 @@ fn print_results_table(solution_formats: &Vec<SolutionFormat>, max_length: &MaxL
         timing_width = max_length.timing
     );
     println!(
-        "╟─{empty:─<day_width$}─┼─{empty:─<puzzle_width$}─┼─{empty:─<part_width$}─┼─{empty:─<solution_width$}─┼─{empty:─<timing_width$}─╢",
+        "╟─{empty:─<year_width$}─┼─{empty:─<day_width$}─┼─{empty:─<puzzle_width$}─┼─{empty:─<part_width$}─┼─{empty:─<solution_width$}─┼─{empty:─<timing_width$}─╢",
         empty = "",
+        year_width = max_length.year,
         day_width = max_length.day,
         puzzle_width = max_length.puzzle,
         part_width = max_length.part,
@@ -146,8 +162,9 @@ fn print_results_table(solution_formats: &Vec<SolutionFormat>, max_length: &MaxL
             is_first_row = false;
         } else {
             println!(
-                "║ {empty:day_width$} │ {empty:puzzle_width$} │ {empty:part_width$} │ {empty:solution_width$} │ {empty:timing_width$} ║",
+                "║ {empty:year_width$} │ {empty:day_width$} │ {empty:puzzle_width$} │ {empty:part_width$} │ {empty:solution_width$} │ {empty:timing_width$} ║",
                 empty = "",
+                year_width = max_length.year,
                 day_width = max_length.day,
                 puzzle_width = max_length.puzzle,
                 part_width = max_length.part,
@@ -159,12 +176,14 @@ fn print_results_table(solution_formats: &Vec<SolutionFormat>, max_length: &MaxL
         // solution_format.solutions.len() and solution_format.times.len() are the same length.
         for index in 0..solution_format.solutions.len() {
             println!(
-                "║ {day:>day_width$} │ {puzzle:puzzle_width$} │ {part:>part_width$} │ {solution:>solution_width$} │ {timing:>timing_width$} ║",
+                "║ {year:>year_width$} │ {day:>day_width$} │ {puzzle:puzzle_width$} │ {part:>part_width$} │ {solution:>solution_width$} │ {timing:>timing_width$} ║",
+                year = if index == 0 {&solution_format.year} else {""},
                 day = if index == 0 {&solution_format.day} else {""},
                 puzzle = if index == 0 {&solution_format.title} else {""},
                 part = (index + 1).to_string(),
                 solution = solution_format.solutions[index],
                 timing = solution_format.times[index],
+                year_width = max_length.year,
                 day_width = max_length.day,
                 puzzle_width = max_length.puzzle,
                 part_width = max_length.part,
@@ -176,8 +195,9 @@ fn print_results_table(solution_formats: &Vec<SolutionFormat>, max_length: &MaxL
 
     // Generate table footer
     println!(
-        "╚═{empty:═<day_width$}═╧═{empty:═<puzzle_width$}═╧═{empty:═<part_width$}═╧═{empty:═<solution_width$}═╧═{empty:═<timing_width$}═╝",
+        "╚═{empty:═<year_width$}═╧═{empty:═<day_width$}═╧═{empty:═<puzzle_width$}═╧═{empty:═<part_width$}═╧═{empty:═<solution_width$}═╧═{empty:═<timing_width$}═╝",
         empty = "",
+        year_width = max_length.year,
         day_width = max_length.day,
         puzzle_width = max_length.puzzle,
         part_width = max_length.part,

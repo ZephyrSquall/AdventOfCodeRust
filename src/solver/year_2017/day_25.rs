@@ -1,8 +1,9 @@
-use super::{Solution, Solver};
+use crate::solver::{Solution, Solver};
 use rustc_hash::FxHashMap;
 use std::collections::VecDeque;
 
 pub const SOLVER: Solver = Solver {
+    year: 2017,
     day: 25,
     title: "The Halting Problem",
     part_solvers: &[solve_1],
