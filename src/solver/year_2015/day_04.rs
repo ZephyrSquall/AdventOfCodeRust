@@ -4,7 +4,7 @@ pub const SOLVER: Solver = Solver {
     year: 2015,
     day: 4,
     title: "The Ideal Stocking Stuffer",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
@@ -17,6 +17,22 @@ fn solve_1(input: &str) -> Solution {
         // 20 binary digits are 0. This can be easily tested by right-shifting by 108 (128 - 20) to
         // truncate all but the upper 20 bits, and testing if the result is equal to 0.
         if hash >> 108 == 0 {
+            break;
+        }
+
+        index += 1;
+    }
+
+    Solution::U32(index)
+}
+
+fn solve_2(input: &str) -> Solution {
+    let mut index = 0;
+    loop {
+        let mut hash_input = input.to_string();
+        hash_input.push_str(&index.to_string());
+        let hash = md5(&hash_input);
+        if hash >> 104 == 0 {
             break;
         }
 
