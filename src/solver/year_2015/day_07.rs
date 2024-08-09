@@ -5,7 +5,7 @@ pub const SOLVER: Solver = Solver {
     year: 2015,
     day: 7,
     title: "Some Assembly Required",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
@@ -17,6 +17,32 @@ fn solve_1(input: &str) -> Solution {
         // every gate who returned true (indicating it successfully executed its operation). This is
         // exactly what the vector's retain() method does (except it removes elements that return
         // false so the return value must be flipped with !).
+        gates.retain(|gate| !gate.execute(&mut wires));
+    }
+
+    Solution::U16(*wires.get("a").expect("Should have a value for wire \"a\""))
+}
+
+fn solve_2(input: &str) -> Solution {
+    let mut wires = FxHashMap::default();
+    let mut gates = get_gates(input);
+
+    // Remove the gate that assigns a value to wire "b"
+    gates.retain(|gate| {
+        if let Gate::Assign(_value_or_identifier, output) = gate {
+            *output != "b"
+        } else {
+            true
+        }
+    });
+    // Get the solution from part 1.
+    let Solution::U16(wire_b_override) = solve_1(input) else {
+        panic!("Part 1 should return a u16")
+    };
+    // Add a new gate that assigns the solution from part 1 to wire "b".
+    gates.push(Gate::Assign(ValueOrIdentifier::Value(wire_b_override), "b"));
+
+    while !gates.is_empty() {
         gates.retain(|gate| !gate.execute(&mut wires));
     }
 
@@ -84,10 +110,10 @@ impl<'a, 'b, 'c> Gate<'a, 'b, 'c> {
                     None => false,
                 }
             }
-            Gate::And(arg1, arg2, output) => {
-                let arg1 = arg1.get_value(wires);
-                let arg2 = arg2.get_value(wires);
-                match (arg1, arg2) {
+            Gate::And(arg_1, arg_2, output) => {
+                let arg_1 = arg_1.get_value(wires);
+                let arg_2 = arg_2.get_value(wires);
+                match (arg_1, arg_2) {
                     (Some(value1), Some(value2)) => {
                         wires.insert(output, *value1 & *value2);
                         true
@@ -95,10 +121,10 @@ impl<'a, 'b, 'c> Gate<'a, 'b, 'c> {
                     _ => false,
                 }
             }
-            Gate::Or(arg1, arg2, output) => {
-                let arg1 = arg1.get_value(wires);
-                let arg2 = arg2.get_value(wires);
-                match (arg1, arg2) {
+            Gate::Or(arg_1, arg_2, output) => {
+                let arg_1 = arg_1.get_value(wires);
+                let arg_2 = arg_2.get_value(wires);
+                match (arg_1, arg_2) {
                     (Some(value1), Some(value2)) => {
                         wires.insert(output, *value1 | *value2);
                         true
@@ -106,10 +132,10 @@ impl<'a, 'b, 'c> Gate<'a, 'b, 'c> {
                     _ => false,
                 }
             }
-            Gate::LShift(arg1, arg2, output) => {
-                let arg1 = arg1.get_value(wires);
-                let arg2 = arg2.get_value(wires);
-                match (arg1, arg2) {
+            Gate::LShift(arg_1, arg_2, output) => {
+                let arg_1 = arg_1.get_value(wires);
+                let arg_2 = arg_2.get_value(wires);
+                match (arg_1, arg_2) {
                     (Some(value1), Some(value2)) => {
                         wires.insert(output, *value1 << *value2);
                         true
@@ -117,10 +143,10 @@ impl<'a, 'b, 'c> Gate<'a, 'b, 'c> {
                     _ => false,
                 }
             }
-            Gate::RShift(arg1, arg2, output) => {
-                let arg1 = arg1.get_value(wires);
-                let arg2 = arg2.get_value(wires);
-                match (arg1, arg2) {
+            Gate::RShift(arg_1, arg_2, output) => {
+                let arg_1 = arg_1.get_value(wires);
+                let arg_2 = arg_2.get_value(wires);
+                match (arg_1, arg_2) {
                     (Some(value1), Some(value2)) => {
                         wires.insert(output, *value1 >> *value2);
                         true
