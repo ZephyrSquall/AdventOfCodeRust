@@ -4,7 +4,7 @@ pub const SOLVER: Solver = Solver {
     year: 2015,
     day: 8,
     title: "Matchsticks",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
@@ -45,6 +45,30 @@ fn solve_1(input: &str) -> Solution {
     Solution::U32(character_difference)
 }
 
+fn solve_2(input: &str) -> Solution {
+    // Tracking the absolute number of characters in the encoded string code and characters in the
+    // original string is unnecessary, only the difference between them matters.
+    let mut character_difference = 0;
+
+    for line in input.lines() {
+        // Always add 2 to character_difference for each line to represent the difference caused by
+        // wrapping the string in another pair of quotation marks.
+        character_difference += 2;
+
+        for character in line.chars() {
+            // The only characters that need to be escaped are double quotes and backslashes, and
+            // doing so requires simply adding an additional backslash which causes a difference of
+            // 1 character. All other characters are simply displayed as-is, for a difference of 0
+            // characters.
+            if character == '\"' || character == '\\' {
+                character_difference += 1;
+            }
+        }
+    }
+
+    Solution::U32(character_difference)
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -68,5 +92,26 @@ mod test {
     fn example1_4() {
         // Input string is: "\x27"
         assert_eq!(solve_1("\"\\x27\""), Solution::U8(5));
+    }
+
+    #[test]
+    fn example2_1() {
+        // Input string is: ""
+        assert_eq!(solve_2("\"\""), Solution::U8(4));
+    }
+    #[test]
+    fn example2_2() {
+        // Input string is: "abc"
+        assert_eq!(solve_2("\"abc\""), Solution::U8(4));
+    }
+    #[test]
+    fn example2_3() {
+        // Input string is: "aaa\"aaa"
+        assert_eq!(solve_2("\"aaa\\\"aaa\""), Solution::U8(6));
+    }
+    #[test]
+    fn example2_4() {
+        // Input string is: "\x27"
+        assert_eq!(solve_2("\"\\x27\""), Solution::U8(5));
     }
 }
