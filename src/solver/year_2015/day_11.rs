@@ -5,7 +5,7 @@ pub const SOLVER: Solver = Solver {
     year: 2015,
     day: 11,
     title: "Corporate Policy",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
@@ -21,10 +21,24 @@ fn solve_1(input: &str) -> Solution {
     Solution::String(String::from_utf8(bytes).expect("Bytes should form a valid string"))
 }
 
+fn solve_2(input: &str) -> Solution {
+    let mut bytes = input.as_bytes().to_vec();
+
+    let mut valid_passwords: u8 = 0;
+    while valid_passwords < 2 {
+        increment_ascii(&mut bytes);
+        if is_valid_password(&bytes) {
+            valid_passwords += 1;
+        }
+    }
+
+    Solution::String(String::from_utf8(bytes).expect("Bytes should form a valid string"))
+}
+
 fn is_valid_password(bytes: &[u8]) -> bool {
     let mut has_increasing_straight_of_three = false;
-    let mut increasing_straight_length = 1;
-    let mut doubles = 0;
+    let mut increasing_straight_length: u8 = 1;
+    let mut doubles: u8 = 0;
     let mut previous_byte_was_paired = false;
     let mut previous_byte = None;
 
