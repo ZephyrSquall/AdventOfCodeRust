@@ -4,11 +4,15 @@ pub const SOLVER: Solver = Solver {
     year: 2015,
     day: 10,
     title: "Elves Look, Elves Say",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
     solve(input, 40)
+}
+
+fn solve_2(input: &str) -> Solution {
+    solve(input, 50)
 }
 
 fn solve(input: &str, iterations: u8) -> Solution {
