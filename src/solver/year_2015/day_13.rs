@@ -6,26 +6,34 @@ pub const SOLVER: Solver = Solver {
     year: 2015,
     day: 13,
     title: "Knights of the Dinner Table",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
     let (attendees, relationships) = get_attendees_and_relationships(input);
-    let mut greatest_total_happiness = i32::MIN;
 
-    // Check every possible permutation of attendees.
-    for arrangement in attendees.iter().permutations(attendees.len()) {
-        // Sum up the happiness from every pair of adjacent attendees.
-        let mut total_happiness = 0;
-        for (attendee_1, attendee_2) in arrangement.iter().circular_tuple_windows() {
-            total_happiness += get_happiness(&relationships, attendee_1, attendee_2);
-        }
+    let greatest_total_happiness = get_greatest_total_happiness(&attendees, &relationships);
+    Solution::I32(greatest_total_happiness)
+}
 
-        if total_happiness > greatest_total_happiness {
-            greatest_total_happiness = total_happiness;
-        }
+fn solve_2(input: &str) -> Solution {
+    let (mut attendees, mut relationships) = get_attendees_and_relationships(input);
+
+    for attendee in &attendees {
+        relationships.push(Relationship {
+            attendee_1: attendee,
+            attendee_2: "Me",
+            happiness: 0,
+        });
+        relationships.push(Relationship {
+            attendee_1: "Me",
+            attendee_2: attendee,
+            happiness: 0,
+        });
     }
+    attendees.insert("Me");
 
+    let greatest_total_happiness = get_greatest_total_happiness(&attendees, &relationships);
     Solution::I32(greatest_total_happiness)
 }
 
@@ -33,33 +41,6 @@ struct Relationship<'a, 'b> {
     attendee_1: &'a str,
     attendee_2: &'b str,
     happiness: i32,
-}
-
-// Get the sum of the total happiness that each of the two given attendees feel towards each other.
-fn get_happiness(relationships: &[Relationship], attendee_1: &str, attendee_2: &str) -> i32 {
-    let mut happiness = 0;
-    // By tracking whether the first match is found, the search can be immediately terminated upon
-    // finding the second match, improving performance.
-    let mut found_first_match = false;
-
-    for relationship in relationships {
-        if relationship.attendee_1 == attendee_1 && relationship.attendee_2 == attendee_2 {
-            happiness += relationship.happiness;
-            if found_first_match {
-                return happiness;
-            }
-            found_first_match = true;
-        }
-        if relationship.attendee_1 == attendee_2 && relationship.attendee_2 == attendee_1 {
-            happiness += relationship.happiness;
-            if found_first_match {
-                return happiness;
-            }
-            found_first_match = true;
-        }
-    }
-
-    panic!("Relationships vector should contain all possible relationships");
 }
 
 fn get_attendees_and_relationships(input: &str) -> (FxHashSet<&str>, Vec<Relationship>) {
@@ -102,6 +83,58 @@ fn get_attendees_and_relationships(input: &str) -> (FxHashSet<&str>, Vec<Relatio
     }
 
     (attendees, relationships)
+}
+
+fn get_greatest_total_happiness(
+    attendees: &FxHashSet<&str>,
+    relationships: &[Relationship],
+) -> i32 {
+    let mut greatest_total_happiness = i32::MIN;
+    // Check every possible permutation of attendees.
+    for arrangement in attendees.iter().permutations(attendees.len()) {
+        // Sum up the happiness from every pair of adjacent attendees.
+        let mut total_happiness = 0;
+        for (attendee_1, attendee_2) in arrangement.iter().circular_tuple_windows() {
+            total_happiness += get_happiness_of_pair(relationships, attendee_1, attendee_2);
+        }
+
+        if total_happiness > greatest_total_happiness {
+            greatest_total_happiness = total_happiness;
+        }
+    }
+
+    greatest_total_happiness
+}
+
+// Get the sum of the total happiness that each of the two given attendees feel towards each other.
+fn get_happiness_of_pair(
+    relationships: &[Relationship],
+    attendee_1: &str,
+    attendee_2: &str,
+) -> i32 {
+    let mut happiness = 0;
+    // By tracking whether the first match is found, the search can be immediately terminated upon
+    // finding the second match, improving performance.
+    let mut found_first_match = false;
+
+    for relationship in relationships {
+        if relationship.attendee_1 == attendee_1 && relationship.attendee_2 == attendee_2 {
+            happiness += relationship.happiness;
+            if found_first_match {
+                return happiness;
+            }
+            found_first_match = true;
+        }
+        if relationship.attendee_1 == attendee_2 && relationship.attendee_2 == attendee_1 {
+            happiness += relationship.happiness;
+            if found_first_match {
+                return happiness;
+            }
+            found_first_match = true;
+        }
+    }
+
+    panic!("Relationships vector should contain all possible relationships");
 }
 
 #[cfg(test)]
