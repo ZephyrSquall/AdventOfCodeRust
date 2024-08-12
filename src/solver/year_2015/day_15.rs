@@ -5,7 +5,7 @@ pub const SOLVER: Solver = Solver {
     year: 2015,
     day: 15,
     title: "Science for Hungry People",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
@@ -18,7 +18,20 @@ fn solve_1(input: &str) -> Solution {
         calories: 0,
     };
 
-    Solution::I32(find_highest_score(&ingredients, 100, 0, &cookie))
+    Solution::I32(find_highest_score(&ingredients, 100, false, 0, &cookie))
+}
+
+fn solve_2(input: &str) -> Solution {
+    let ingredients = get_ingredients(input);
+    let cookie = Ingredient {
+        capacity: 0,
+        durability: 0,
+        flavor: 0,
+        texture: 0,
+        calories: 0,
+    };
+
+    Solution::I32(find_highest_score(&ingredients, 100, true, 0, &cookie))
 }
 
 // The ingredients' names are not important, only their stats are.
@@ -100,6 +113,7 @@ fn get_ingredients(input: &str) -> Vec<Ingredient> {
 fn find_highest_score(
     ingredients: &[Ingredient],
     mut teaspoons: i32,
+    has_calorie_limit: bool,
     // depth indicates which ingredient (by index) is currently being added to the cookie. Each
     // level of recursion moves on to the next ingredient.
     depth: usize,
@@ -123,11 +137,17 @@ fn find_highest_score(
             calories: cookie.calories + (teaspoons * this_ingredient.calories),
         };
 
-        // Calculate and return the score. Zero out any ingredient category that is negative.
-        max(final_cookie.capacity, 0)
-            * max(final_cookie.durability, 0)
-            * max(final_cookie.flavor, 0)
-            * max(final_cookie.texture, 0)
+        if has_calorie_limit && final_cookie.calories != 500 {
+            // If the mixture doesn't have the right number of calories, Remove this mixture from
+            // the results by returning 0, ensuring it can't be the highest-scoring mixture.
+            0
+        } else {
+            // Calculate and return the score. Zero out any ingredient category that is negative.
+            max(final_cookie.capacity, 0)
+                * max(final_cookie.durability, 0)
+                * max(final_cookie.flavor, 0)
+                * max(final_cookie.texture, 0)
+        }
     } else {
         let mut highest_score = 0;
         let this_ingredient = &ingredients[depth];
@@ -150,6 +170,7 @@ fn find_highest_score(
                 // with the difference between the starting number of teaspoons and the teaspoons
                 // used so far.
                 starting_teaspoons - teaspoons,
+                has_calorie_limit,
                 // Increase the depth by one so the recursively-called function moves onto the next
                 // ingredient in the ingredients vector.
                 depth + 1,
@@ -184,6 +205,18 @@ Butterscotch: capacity -1, durability -2, flavor 6, texture 3, calories 8
 Cinnamon: capacity 2, durability 3, flavor -2, texture -1, calories 3"
             ),
             Solution::U32(62_842_880)
+        );
+    }
+
+    #[test]
+    fn example2_1() {
+        assert_eq!(
+            solve_2(
+                "\
+Butterscotch: capacity -1, durability -2, flavor 6, texture 3, calories 8
+Cinnamon: capacity 2, durability 3, flavor -2, texture -1, calories 3"
+            ),
+            Solution::U32(57_600_000)
         );
     }
 }
