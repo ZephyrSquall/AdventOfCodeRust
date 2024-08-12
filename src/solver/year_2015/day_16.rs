@@ -4,7 +4,7 @@ pub const SOLVER: Solver = Solver {
     year: 2015,
     day: 16,
     title: "Aunt Sue",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
@@ -12,6 +12,20 @@ fn solve_1(input: &str) -> Solution {
 
     for (index, aunt_sue) in aunt_sues.iter().enumerate() {
         if is_real_aunt_sue(aunt_sue) {
+            // It is assumed that exactly one Aunt Sue matches, so this function immediately returns
+            // the first one that matches because there are no more matches to find.
+            return Solution::USize(index + 1);
+        }
+    }
+
+    panic!("No Aunt Sue matched");
+}
+
+fn solve_2(input: &str) -> Solution {
+    let aunt_sues = get_aunt_sues(input);
+
+    for (index, aunt_sue) in aunt_sues.iter().enumerate() {
+        if is_real_aunt_sue_with_ranges(aunt_sue) {
             // It is assumed that exactly one Aunt Sue matches, so this function immediately returns
             // the first one that matches because there are no more matches to find.
             return Solution::USize(index + 1);
@@ -102,6 +116,19 @@ fn is_real_aunt_sue(aunt_sue: &AuntSue) -> bool {
         && (aunt_sue.vizslas.is_none() || aunt_sue.vizslas == REAL_AUNT_SUE.vizslas)
         && (aunt_sue.goldfish.is_none() || aunt_sue.goldfish == REAL_AUNT_SUE.goldfish)
         && (aunt_sue.trees.is_none() || aunt_sue.trees == REAL_AUNT_SUE.trees)
+        && (aunt_sue.cars.is_none() || aunt_sue.cars == REAL_AUNT_SUE.cars)
+        && (aunt_sue.perfumes.is_none() || aunt_sue.perfumes == REAL_AUNT_SUE.perfumes)
+}
+
+fn is_real_aunt_sue_with_ranges(aunt_sue: &AuntSue) -> bool {
+    (aunt_sue.children.is_none() || aunt_sue.children == REAL_AUNT_SUE.children)
+        && (aunt_sue.cats.is_none() || aunt_sue.cats > REAL_AUNT_SUE.cats)
+        && (aunt_sue.samoyeds.is_none() || aunt_sue.samoyeds == REAL_AUNT_SUE.samoyeds)
+        && (aunt_sue.pomeranians.is_none() || aunt_sue.pomeranians < REAL_AUNT_SUE.pomeranians)
+        && (aunt_sue.akitas.is_none() || aunt_sue.akitas == REAL_AUNT_SUE.akitas)
+        && (aunt_sue.vizslas.is_none() || aunt_sue.vizslas == REAL_AUNT_SUE.vizslas)
+        && (aunt_sue.goldfish.is_none() || aunt_sue.goldfish < REAL_AUNT_SUE.goldfish)
+        && (aunt_sue.trees.is_none() || aunt_sue.trees > REAL_AUNT_SUE.trees)
         && (aunt_sue.cars.is_none() || aunt_sue.cars == REAL_AUNT_SUE.cars)
         && (aunt_sue.perfumes.is_none() || aunt_sue.perfumes == REAL_AUNT_SUE.perfumes)
 }
