@@ -61,7 +61,7 @@ impl<'a> PartialEq for Solution<'a> {
 pub mod year_2015;
 pub mod year_2017;
 
-pub const SOLVERS: [Solver; 39] = [
+pub const SOLVERS: [Solver; 40] = [
     year_2017::day_25::SOLVER,
     year_2017::day_24::SOLVER,
     year_2017::day_23::SOLVER,
@@ -87,6 +87,7 @@ pub const SOLVERS: [Solver; 39] = [
     year_2017::day_03::SOLVER,
     year_2017::day_02::SOLVER,
     year_2017::day_01::SOLVER,
+    year_2015::day_15::SOLVER,
     year_2015::day_14::SOLVER,
     year_2015::day_13::SOLVER,
     year_2015::day_12::SOLVER,
