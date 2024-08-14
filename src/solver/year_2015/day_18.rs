@@ -4,18 +4,33 @@ pub const SOLVER: Solver = Solver {
     year: 2015,
     day: 18,
     title: "Like a GIF For Your Yard",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
-    solve(input, 100)
+    solve(input, 100, false)
 }
 
-fn solve(input: &str, steps: u32) -> Solution {
+fn solve_2(input: &str) -> Solution {
+    solve(input, 100, true)
+}
+
+fn solve(input: &str, steps: u32, are_corners_always_on: bool) -> Solution {
     let mut lights = get_lights(input);
 
+    // If corner lights are always on, turn them on regardless of whether they were on or off in the
+    // puzzle input.
+    if are_corners_always_on {
+        let x_len = lights[0].len();
+        let y_len = lights.len();
+        lights[0][0] = true;
+        lights[0][x_len - 1] = true;
+        lights[y_len - 1][0] = true;
+        lights[y_len - 1][x_len - 1] = true;
+    }
+
     for _ in 0..steps {
-        step(&mut lights);
+        step(&mut lights, are_corners_always_on);
     }
 
     let mut count = 0;
@@ -48,7 +63,7 @@ fn get_lights(input: &str) -> Vec<Vec<bool>> {
     lights
 }
 
-fn step(lights: &mut [Vec<bool>]) {
+fn step(lights: &mut [Vec<bool>], are_corners_always_on: bool) {
     let x_len = lights[0].len();
     let y_len = lights.len();
     let mut adjacent_light_counts = vec![vec!(0; x_len); y_len];
@@ -97,6 +112,12 @@ fn step(lights: &mut [Vec<bool>]) {
     // Turn lights on or off according to their current state and number of lit neighbors.
     for y in 0..y_len {
         for x in 0..x_len {
+            // If this is a corner light and corner lights are always on, skip to the next light
+            // (this light will retain its current value, which was previously initialized to true)
+            if are_corners_always_on && (x == x_len - 1 || x == 0) && (y == y_len - 1 || y == 0) {
+                continue;
+            }
+
             let light = &mut lights[y][x];
             let adjacent_light_count = adjacent_light_counts[y][x];
 
@@ -128,9 +149,28 @@ mod test {
 ..#...
 #.#..#
 ####..",
-                4
+                4,
+                false
             ),
             Solution::U8(4)
+        );
+    }
+
+    #[test]
+    fn example2_1() {
+        assert_eq!(
+            solve(
+                "\
+.#.#.#
+...##.
+#....#
+..#...
+#.#..#
+####..",
+                5,
+                true
+            ),
+            Solution::U8(17)
         );
     }
 }
