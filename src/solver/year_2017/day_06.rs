@@ -30,7 +30,7 @@ fn solve(input: &str, get_loop_size: bool) -> Solution {
         // Find the max value and the index of this value (note: cannot use a iterator with
         // position_max() as when there are multiple elements with the max value, this returns the
         // index of the last max element but the index of the first max element is needed.)
-        let mut max_bank = u32::min_value();
+        let mut max_bank = u32::MIN;
         let mut max_bank_index = 0;
         for (index, bank) in banks.iter().enumerate() {
             if *bank > max_bank {

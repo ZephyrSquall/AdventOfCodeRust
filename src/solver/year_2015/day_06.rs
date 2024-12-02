@@ -38,7 +38,7 @@ fn solve_1(input: &str) -> Solution {
     }
 
     let mut count = 0;
-    for light_row in lights.iter() {
+    for light_row in &lights {
         for light in light_row {
             if *light {
                 count += 1;
@@ -102,7 +102,7 @@ fn solve_2(input: &str) -> Solution {
     }
 
     let mut brightness = 0;
-    for light_row in lights.iter() {
+    for light_row in &lights {
         for light in light_row {
             brightness += light;
         }
