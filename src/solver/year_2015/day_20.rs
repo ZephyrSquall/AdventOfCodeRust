@@ -4,7 +4,7 @@ pub const SOLVER: Solver = Solver {
     year: 2015,
     day: 20,
     title: "Infinite Elves and Infinite Houses",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
@@ -40,6 +40,32 @@ fn solve_1(input: &str) -> Solution {
 
     // All presents have now been delivered to houses under the house limit. Find the first house
     // that got the target number of presents.
+    for (house_number, presents) in num_presents_at_house.iter().enumerate() {
+        if *presents >= target {
+            return Solution::USize(house_number);
+        }
+    }
+    panic!("Should have found a house with at least as many presents as the target number")
+}
+
+fn solve_2(input: &str) -> Solution {
+    let target = input.parse::<usize>().expect("Input should be a number");
+
+    let house_limit = target / 11;
+    let mut num_presents_at_house = vec![0; house_limit].into_boxed_slice();
+
+    for elf_number in 1..house_limit {
+        let mut house_number = elf_number;
+        let mut houses_visited: u8 = 1;
+        // Elves no longer deliver presents infinitely, so stop after they deliver their 50th
+        // present (or after they reach the house limit).
+        while house_number < house_limit && houses_visited <= 50 {
+            num_presents_at_house[house_number] += elf_number * 11;
+            house_number += elf_number;
+            houses_visited += 1;
+        }
+    }
+
     for (house_number, presents) in num_presents_at_house.iter().enumerate() {
         if *presents >= target {
             return Solution::USize(house_number);
