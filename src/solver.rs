@@ -62,7 +62,7 @@ pub mod year_2015;
 pub mod year_2017;
 pub mod year_2024;
 
-pub const SOLVERS: [Solver; 47] = [
+pub const SOLVERS: [Solver; 48] = [
     year_2024::day_03::SOLVER,
     year_2024::day_02::SOLVER,
     year_2024::day_01::SOLVER,
@@ -91,8 +91,7 @@ pub const SOLVERS: [Solver; 47] = [
     year_2017::day_03::SOLVER,
     year_2017::day_02::SOLVER,
     year_2017::day_01::SOLVER,
-    // The solver for 2015 day 20 is omitted as my current solution takes several minutes to run.
-    // year_2015::day_20::SOLVER,
+    year_2015::day_20::SOLVER,
     year_2015::day_19::SOLVER,
     year_2015::day_18::SOLVER,
     year_2015::day_17::SOLVER,
