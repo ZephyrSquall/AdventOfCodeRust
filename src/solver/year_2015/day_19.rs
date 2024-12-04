@@ -6,7 +6,7 @@ pub const SOLVER: Solver = Solver {
     year: 2015,
     day: 19,
     title: "Medicine for Rudolph",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
@@ -30,6 +30,58 @@ fn solve_1(input: &str) -> Solution {
     }
 
     Solution::USize(molecules_with_replacement.len())
+}
+
+fn solve_2(input: &str) -> Solution {
+    // Solving this task in general has proven to be infeasible due to how quickly the tree of all
+    // possibilities grows. Such a solution seems like it will inevitably take several minutes,
+    // possibly hours to run. However, my puzzle input has certain patterns that seem intentional,
+    // and using these patterns allows for an extremely efficient solution, so I will assume this is
+    // an intentional pattern that all puzzle inputs share.
+    //
+    // The atoms "Rn", "Ar", and "Y" have special meaning in these patterns, so for brevity, any
+    // atom that isn't one of these three will be called a "standard" atom from here on. Every
+    // replacement rule in my puzzle input falls into one of the following patterns:
+    // standard => standard-standard
+    // standard => standard-Rn-standard-Ar
+    // standard => standard-Rn-standard-Y-standard-Ar
+    // standard => standard-Rn-standard-Y-standard-Y-standard-Ar
+    //
+    // Replacement rules that replace one standard atom with exactly two standard atoms always add
+    // one standard atom overall to the molecule. Replacement rules involving "Rn" and "Ar" always
+    // add either one, two, or three standard atoms overall to the molecule depending on if it has
+    // zero, one, or two "Y" atoms respectively.
+    //
+    // This information allows a quick algorithm to calculate the number of steps that must have
+    // been taken to create the molecule. First, count every standard atom, as most standard atoms
+    // are produced by a replacement rule that replaces one atom with two standard atoms, which is a
+    // single step that adds a single atom overall. Do not count "Rn" or "Ar" atoms, as these
+    // replacements occur in "standard-Rn-standard-Ar" patterns, and the two standard atoms there
+    // already account for a single step. These patterns may also include one or two "Y" atoms
+    // followed by a standard atom, and each of these occurrences do not indicate any additional
+    // steps, so subtract 1 from this count for each "Y" atom to undo the count of its following
+    // standard atom. Subtract 1 from this final count because the whole process starts with an "e",
+    // which doesn't count as a step and must be ignored.
+    //
+    // In summary: The number of steps equals the number of standard atoms minus the number of "Y"
+    // atoms, then minus 1.
+
+    let mut line_iter = input.lines();
+    let molecule_str = line_iter
+        .next_back()
+        .expect("Input should have at least one line");
+    let molecule = get_molecule(molecule_str);
+
+    let mut steps = -1;
+    for atom in molecule {
+        match atom.as_str() {
+            "Y" => steps -= 1,
+            "Rn" | "Ar" => {}
+            _ => steps += 1,
+        }
+    }
+
+    Solution::I32(steps)
 }
 
 // Parse the input into a hash map of replacement rules (keyed by the input atom with the value
@@ -148,4 +200,8 @@ HOHOHO"
             Solution::U8(7)
         );
     }
+
+    // The example for part 2 given in the puzzle description cannot be tested, as the example input
+    // contradicts an assumption that was made about puzzle inputs (it contains replacement rules
+    // of the form standard => standard).
 }
