@@ -92,6 +92,9 @@ pub const SOLVERS: [Solver; 50] = [
     year_2017::day_03::SOLVER,
     year_2017::day_02::SOLVER,
     year_2017::day_01::SOLVER,
+    // The solver for 2015 day 22 is omitted as my current solution takes an unknown amount of time
+    // (at least two hours) to run.
+    // year_2015::day_22::SOLVER,
     year_2015::day_21::SOLVER,
     year_2015::day_20::SOLVER,
     year_2015::day_19::SOLVER,
