@@ -7,10 +7,18 @@ pub const SOLVER: Solver = Solver {
     year: 2015,
     day: 22,
     title: "Wizard Simulator 20XX",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
+    solve(input, false)
+}
+
+fn solve_2(input: &str) -> Solution {
+    solve(input, true)
+}
+
+fn solve(input: &str, is_hard_mode: bool) -> Solution {
     // Since the player has to spend mana every turn, the fight which spends the minimum amount of
     // mana and still wins is overwhelmingly likely to occur in a low number of turns. The player
     // also has the means to stall out the fight for an extremely high number of turns by raising
@@ -50,6 +58,7 @@ fn solve_1(input: &str) -> Solution {
         mut params: TurnCycleParameters,
         mana_spent_upper_limit: i32,
         queue: &mut VecDeque<TurnCycleParameters>,
+        is_hard_mode: bool,
     ) -> i32 {
         // Add the mana cost of the chosen spell to the total mana spent. If this goes above the
         // upper limit, then a path to victory that spends less mana than this has already been
@@ -87,9 +96,12 @@ fn solve_1(input: &str) -> Solution {
         }
 
         // Effects have been applied, so now the boss attacks. Determine damage, reduce the player's
-        // HP, then check if the player just lost the fight.
-        let boss_damage_dealt = max(1, params.boss.damage - params.player.armor);
+        // HP, then check if the player just lost the fight. In hard mode (part 2), add 1 to the
+        // boss's damage to account for the extra 1 the player takes at the start of their turns.
+        let boss_damage_dealt =
+            max(1, params.boss.damage - params.player.armor) + i32::from(is_hard_mode);
         params.player.hit_points -= boss_damage_dealt;
+
         if params.player.hit_points <= 0 {
             return i32::MAX;
         }
@@ -132,7 +144,7 @@ fn solve_1(input: &str) -> Solution {
 
     // Set up the initial stats of the player and boss, and initialize the mana spent record and the
     // turn cycle queue.
-    let player = Player {
+    let mut player = Player {
         hit_points: 50,
         mana: 500,
         armor: 0,
@@ -145,7 +157,11 @@ fn solve_1(input: &str) -> Solution {
     // it, as on the first turn the player has sufficient mana to cast any spell and no effects have
     // been set up. It is also not necessary to apply effects at the start of the player's first
     // turn, as no effects have been set up. Thus, turn_cycle can be called immediately for all five
-    // spells.
+    // spells. However, on hard mode (part 2), the player will take one damage at the start of their
+    // first turn before they can cast any spells.
+    if is_hard_mode {
+        player.hit_points -= 1;
+    }
     for spell in &SPELLS {
         turn_cycle_queue.push_back(TurnCycleParameters {
             spell,
@@ -162,7 +178,12 @@ fn solve_1(input: &str) -> Solution {
         // minimum_victory_mana_spent can only be changed if the player won.
         minimum_victory_mana_spent = min(
             minimum_victory_mana_spent,
-            turn_cycle(params, minimum_victory_mana_spent, &mut turn_cycle_queue),
+            turn_cycle(
+                params,
+                minimum_victory_mana_spent,
+                &mut turn_cycle_queue,
+                is_hard_mode,
+            ),
         );
     }
 
