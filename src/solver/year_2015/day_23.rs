@@ -4,10 +4,19 @@ pub const SOLVER: Solver = Solver {
     year: 2015,
     day: 23,
     title: "Opening the Turing Lock",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
+    solve(input, [0, 0])
+}
+
+fn solve_2(input: &str) -> Solution {
+    solve(input, [1, 0])
+}
+
+// registers[0] is a, registers[1] is b.
+fn solve(input: &str, mut registers: [u32; 2]) -> Solution {
     // Get all instructions.
     let mut instructions = Vec::new();
     for line in input.lines() {
@@ -34,8 +43,6 @@ fn solve_1(input: &str) -> Solution {
     }
 
     let mut program_counter = 0;
-    // registers[0] is a, registers[1] is b.
-    let mut registers = [0, 0];
 
     // Execute instructions until the program counter reaches an invalid index.
     while let Some(instruction) = instructions.get(program_counter) {
