@@ -1,4 +1,5 @@
 use crate::solver::{Solution, Solver};
+use rustc_hash::FxHashMap;
 
 pub const SOLVER: Solver = Solver {
     year: 2024,
@@ -11,66 +12,11 @@ fn solve_1(input: &str) -> Solution {
     solve(input, 25)
 }
 
-// Part 2 currently would take an enormous amount of time to run if it attempted to perform all 75
-// iterations, so it is intentionally set to just 25 for now to avoid blocking a run of all solvers.
 fn solve_2(input: &str) -> Solution {
-    solve(input, 25)
+    solve(input, 75)
 }
 
-// My code for part 1 already took several seconds, and part 2 requires significantly more numbers
-// which my code couldn't handle, so I need to improve the efficiency of my code. My first attempt
-// was to change my data structure, so that instead of just being a vector of numbers, it's a vector
-// of Stone enums that themselves are either a number or a reference to two other Stones. This way,
-// when a stone splits, I can just change create two new stones and change the enum of the current
-// stone to point to the new stones, avoiding the need to shift all elements in the vector over by
-// one. This was an enormous improvement, increasing the speed of part 1 by roughly a factor of 20.
-// However, this code still didn't solve part 2 after running for 10 minutes, so there must still be
-// other improvements I'm missing that can speed up this code significantly further.
-fn solve(input: &str, iterations: u32) -> Solution {
-    #[derive(Debug)]
-    enum Stone {
-        Single(u64),
-        Split(Box<Stone>, Box<Stone>),
-    }
-    impl Stone {
-        fn blink(&mut self) {
-            match self {
-                Stone::Single(value) => {
-                    // Set the stone to 1 if it has the value 0.
-                    if *value == 0 {
-                        *value = 1;
-                    } else {
-                        let digits = num_digits(*value);
-                        // Split the stone if it has an even number of digits.
-                        if digits % 2 == 0 {
-                            let (left_stone, right_stone) = split_digits(*value, digits);
-                            *self = Stone::Split(
-                                Box::new(Stone::Single(left_stone)),
-                                Box::new(Stone::Single(right_stone)),
-                            );
-                        } else {
-                            // Otherwise multiply the stone by 2024.
-                            *value *= 2024;
-                        }
-                    }
-                }
-                // If this stone has split, recursively call blink on the resulting stones.
-                Stone::Split(left_stone, right_stone) => {
-                    left_stone.blink();
-                    right_stone.blink();
-                }
-            }
-        }
-
-        // Recursively count how many individual stones are within this stone which may have split.
-        fn len(&self) -> usize {
-            match self {
-                Stone::Single(_) => 1,
-                Stone::Split(left_stone, right_stone) => left_stone.len() + right_stone.len(),
-            }
-        }
-    }
-
+fn solve(input: &str, iterations: usize) -> Solution {
     // Get the number of digits in a number
     fn num_digits(a: u64) -> u32 {
         a.ilog10() + 1
@@ -85,28 +31,106 @@ fn solve(input: &str, iterations: u32) -> Solution {
         (a / ten_power, a % ten_power)
     }
 
+    // Get the number of stones that a stone with the given value will have split into after the
+    // given number of blinks. First the cache is searched to see if it contains the required
+    // number, if not the number is calculated and added to the cache.
+    fn get_stone_splits(
+        value: u64,
+        blinks: usize,
+        stone_num_cache: &mut FxHashMap<u64, Vec<u64>>,
+    ) -> u64 {
+        // stone_after_blinks is a vector arranged such that stone_num_after_blinks[blinks] gives
+        // the number of stones that the given stone will split into after that many blinks. If it
+        // isn't in the cache, initialize it with an empty vector.
+        let stone_num_after_blinks = stone_num_cache
+            .entry(value)
+            .or_insert(Vec::with_capacity(blinks));
+
+        // If the value is in the cache, return that value.
+        if blinks < stone_num_after_blinks.len() {
+            return stone_num_after_blinks[blinks];
+        }
+
+        // Otherwise, build up to that value. Start from 0 blinks, which trivially leads to 1 stone.
+        // For each blink after that, calculate which stone or stones the current stone turns into,
+        // and attempt to fetch their value by recursively calling this function, which will also
+        // add those stones to the cache. Repeat this process until the required number of blinks
+        // are reached.
+        for prior_blink in stone_num_after_blinks.len()..=blinks {
+            if prior_blink == 0 {
+                // stone_num_after_blinks cannot be reused within this loop as it takes a mutable
+                // borrow on stone_num_cache and another mutable borrow is required within this loop
+                // if get_stone_splits needs to be called recursively. Hence this value is
+                // separately obtained with get_mut so all mutable borrows on the cache are
+                // immediately dropped after they are used.
+                stone_num_cache
+                    .get_mut(&value)
+                    .expect("Stone value should be in cache")
+                    .push(1);
+            } else {
+                // Get the value of all stones that follow from this stone.
+                let mut child_values = Vec::with_capacity(2);
+                // Set the stone to 1 if it has the value 0.
+                if value == 0 {
+                    child_values.push(1);
+                } else {
+                    let digits = num_digits(value);
+                    // Split the stone if it has an even number of digits.
+                    if digits % 2 == 0 {
+                        let (left_stone, right_stone) = split_digits(value, digits);
+                        child_values.push(left_stone);
+                        child_values.push(right_stone);
+                    } else {
+                        // Otherwise multiply the stone by 2024.
+                        child_values.push(value * 2024);
+                    }
+                }
+
+                // The amount of stones after the given number of blinks is equal to the number
+                // stones that all child stones would have split into after one less than the given
+                // number of blinks. Recursively call this function to find those numbers and add
+                // them together.
+                let mut stone_num = 0;
+                for child_value in child_values {
+                    stone_num += get_stone_splits(child_value, prior_blink - 1, stone_num_cache);
+                }
+                // The cache is always built from 0 to the current value, so pushing will always
+                // insert at the correct index.
+                stone_num_cache
+                    .get_mut(&value)
+                    .expect("Stone value should be in cache")
+                    .push(stone_num);
+            }
+        }
+
+        // When the above loop is exited, the number of stones at the given number of blinks has
+        // been inserted into the cache, so fetch it and return it.
+        stone_num_cache
+            .get(&value)
+            .expect("Stone value should be in cache")[blinks]
+    }
+
     // Get the initial stones.
-    let mut stones = input
+    let stone_values = input
         .split_whitespace()
         .map(|value| {
-            Stone::Single(
-                value
-                    .parse::<u64>()
-                    .expect("Input should only contain numbers"),
-            )
+            value
+                .parse::<u64>()
+                .expect("Input should only contain numbers")
         })
         .collect::<Vec<_>>();
 
-    // Update the stones for the specified number of blinks.
-    for _ in 0..iterations {
-        for stone in &mut stones {
-            stone.blink();
-        }
-    }
+    // Initialize the cache. It's a map indicating how many stones does a stone of a certain value
+    // (the map's key) split into after a certain number of blinks (the index of the value vector at
+    // that key).
+    let mut stone_num_cache: FxHashMap<u64, Vec<u64>> = FxHashMap::default();
 
     // Count the stones.
-    let stones_len = stones.iter().fold(0, |len, stone| len + stone.len());
-    Solution::USize(stones_len)
+    let mut stone_num = 0;
+    for stone_value in stone_values {
+        stone_num += get_stone_splits(stone_value, iterations, &mut stone_num_cache);
+    }
+    Solution::U64(stone_num)
 }
 
 #[cfg(test)]
