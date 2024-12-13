@@ -4,16 +4,24 @@ pub const SOLVER: Solver = Solver {
     year: 2024,
     day: 13,
     title: "Claw Contraption",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
+    solve(input, false)
+}
+
+fn solve_2(input: &str) -> Solution {
+    solve(input, true)
+}
+
+fn solve(input: &str, has_fixed_unit_conversion_error: bool) -> Solution {
     // This refers to a two-dimensional mathematical vector, not Rust's vector type (which is
     // denoted Vec).
     #[derive(Clone, PartialEq)]
     struct Vector {
-        x: u32,
-        y: u32,
+        x: i64,
+        y: i64,
     }
 
     struct ClawMachine {
@@ -26,7 +34,7 @@ fn solve_1(input: &str) -> Solution {
         // apparent way to differentiate their names further without being overly wordy or
         // inaccurate.
         #[allow(clippy::similar_names)]
-        fn new(string: &str) -> ClawMachine {
+        fn new(string: &str, has_fixed_unit_conversion_error: bool) -> ClawMachine {
             let mut line_iter = string.lines();
 
             let button_a_string = line_iter
@@ -84,9 +92,16 @@ fn solve_1(input: &str) -> Solution {
                 .expect("Prize should have a second value after trimming")
                 .parse()
                 .expect("Prize's second value should be a number");
-            let prize = Vector {
-                x: prize_x,
-                y: prize_y,
+            let prize = if has_fixed_unit_conversion_error {
+                Vector {
+                    x: prize_x + 10_000_000_000_000,
+                    y: prize_y + 10_000_000_000_000,
+                }
+            } else {
+                Vector {
+                    x: prize_x,
+                    y: prize_y,
+                }
             };
 
             ClawMachine {
@@ -108,46 +123,46 @@ fn solve_1(input: &str) -> Solution {
         // presses is misleading - there is only one possible amount of button presses that works
         // (or none if the prize position is unreachable).
         #[allow(clippy::similar_names)]
-        fn tokens_to_win(&self) -> usize {
-            // The puzzle description specifies that each button will not need to be pressed more
-            // than 100 times to win. So create a list of every position that is reached in the
-            // process of pressing Button A 100 times. Then, start from the position of the prize,
-            // and work backwards for each B button press, and check if it ever matches an A button
-            // position within 100 presses.
-            let mut button_a_positions = Vec::with_capacity(101);
-            let mut button_a_position = Vector { x: 0, y: 0 };
-            // Add <0,0>, the result of pushing the A button 0 times, to the list.
-            button_a_positions.push(button_a_position.clone());
-            for _ in 0..100 {
-                button_a_position.x += self.button_a.x;
-                button_a_position.y += self.button_a.y;
-                button_a_positions.push(button_a_position.clone());
+        fn tokens_to_win(&self) -> i64 {
+            // The following formula required a mathematical derivation using linear algebra that is
+            // too complex to reproduce in code comments. This derivation was made by considering
+            // the button vectors to be an alternate basis for a two-dimensional vector space, and
+            // then computing the change-of-basis matrix from the basis of unit vectors <0, 1> and
+            // <1, 0> to the basis of the button vectors.
+            //
+            // With this change-of-basis matrix, the prize vector is transformed from the basis of
+            // unit vectors to the basis of button vectors. The coefficients after transformation
+            // indicate how many times each button has to be pressed to reach the prize position. If
+            // the coefficients aren't integers, then it is not possible to reach the prize position
+            // with the given button vectors.
+            //
+            // The change of basis vector from unit vectors to button vectors, (with the button
+            // basis vectors A and B and prize vector P, with "_x" denoting x_coefficient and "_y"
+            // denoting y coefficient in the basis of unit vectors) was calculated to be:
+            // (1 / (A_x * B_y - A_y * B_x)) * [ B_y * P_x - B_x * P_y ]
+            //                                 [ A_x * P_y - A_y * P_x ]
+            //
+            // Using this matrix, first modulo operations are used to check that both of the new
+            // coefficients in the button basis are integers, and if so, division is then used to
+            // calculate the actual coefficients and therefore the number of button pushes, from
+            // which the token cost is calculated and returned.
+            if (self.button_b.y * self.prize.x - self.button_b.x * self.prize.y)
+                % (self.button_a.x * self.button_b.y - self.button_a.y * self.button_b.x)
+                == 0
+                && (self.button_a.x * self.prize.y - self.button_a.y * self.prize.x)
+                    % (self.button_a.x * self.button_b.y - self.button_a.y * self.button_b.x)
+                    == 0
+            {
+                // The token cost is three times the button A pushes, plus the button B pushes.
+                return 3
+                    * ((self.button_b.y * self.prize.x - self.button_b.x * self.prize.y)
+                        / (self.button_a.x * self.button_b.y - self.button_a.y * self.button_b.x))
+                    + ((self.button_a.x * self.prize.y - self.button_a.y * self.prize.x)
+                        / (self.button_a.x * self.button_b.y - self.button_a.y * self.button_b.x));
             }
 
-            let mut button_b_position = self.prize.clone();
-            for button_b_pushes in 0..=100 {
-                if let Some(button_a_pushes) = button_a_positions
-                    .iter()
-                    .position(|button_a_position| *button_a_position == button_b_position)
-                {
-                    return 3 * button_a_pushes + button_b_pushes;
-                }
-
-                // Subtract Button B's vector from its current position. If either index becomes
-                // negative, it has gone "behind" the origin and can no longer possibly meet up with
-                // any Button A position, so return 0.
-                if let Some((button_b_position_x, button_b_position_y)) = button_b_position
-                    .x
-                    .checked_sub(self.button_b.x)
-                    .zip(button_b_position.y.checked_sub(self.button_b.y))
-                {
-                    button_b_position.x = button_b_position_x;
-                    button_b_position.y = button_b_position_y;
-                } else {
-                    return 0;
-                }
-            }
-
+            // Return 0 if the coefficients in the button basis are not integers, as this means the
+            // prize is unwinnable so the best option is to spend no tokens.
             0
         }
     }
@@ -159,10 +174,10 @@ fn solve_1(input: &str) -> Solution {
     let input = input.replace('\r', "");
 
     for claw_machine in input.split("\n\n") {
-        let claw_machine = ClawMachine::new(claw_machine);
+        let claw_machine = ClawMachine::new(claw_machine, has_fixed_unit_conversion_error);
         tokens_to_win_all += claw_machine.tokens_to_win();
     }
-    Solution::USize(tokens_to_win_all)
+    Solution::I64(tokens_to_win_all)
 }
 
 #[cfg(test)]
