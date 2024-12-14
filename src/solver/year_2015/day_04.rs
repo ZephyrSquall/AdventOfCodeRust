@@ -42,12 +42,14 @@ fn solve_2(input: &str) -> Solution {
     Solution::U32(index)
 }
 
+// This function is marked public so it can be reused for the Year 2016 Day 5 puzzle, which also
+// requires calculating MD5 hashes.
+//
 // Note this isn't a full implementation of the MD5 algorithm, as it does not handle long input
-// strings that must be broken down into more than one 512-bit blocks.
-// Many single-character names are used to follow the names of each variable in the definition of
-// the MD5 algorithm.
+// strings that must be broken down into more than one 512-bit blocks. Many single-character names
+// are used to follow the names of each variable in the definition of the MD5 algorithm.
 #[allow(clippy::many_single_char_names)]
-fn md5(input: &str) -> u128 {
+pub fn md5(input: &str) -> u128 {
     const S: [u32; 64] = [
         7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 5, 9, 14, 20, 5, 9, 14, 20, 5,
         9, 14, 20, 5, 9, 14, 20, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 4, 11, 16, 23, 6, 10,
