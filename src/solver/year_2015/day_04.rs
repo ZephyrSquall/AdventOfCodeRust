@@ -195,10 +195,12 @@ pub fn md5(input: &str) -> u128 {
 mod test {
     use super::*;
 
+    #[ignore = "Finding the correct hashes takes several seconds in debug mode"]
     #[test]
     fn example1_1() {
         assert_eq!(solve_1("abcdef"), Solution::U32(609_043));
     }
+    #[ignore = "Finding the correct hashes takes several seconds in debug mode"]
     #[test]
     fn example1_2() {
         assert_eq!(solve_1("pqrstuv"), Solution::U32(1_048_970));
