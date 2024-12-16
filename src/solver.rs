@@ -63,7 +63,8 @@ pub mod year_2016;
 pub mod year_2017;
 pub mod year_2024;
 
-pub const SOLVERS: [Solver; 71] = [
+pub const SOLVERS: [Solver; 72] = [
+    year_2024::day_16::SOLVER,
     year_2024::day_15::SOLVER,
     year_2024::day_14::SOLVER,
     year_2024::day_13::SOLVER,
