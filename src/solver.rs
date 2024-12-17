@@ -64,7 +64,10 @@ pub mod year_2017;
 pub mod year_2024;
 
 pub const SOLVERS: [Solver; 72] = [
-    year_2024::day_16::SOLVER,
+    year_2024::day_17::SOLVER,
+    // Disable this solver for now, as on the puzzle input, it does so much recursion that it
+    // sometimes overflows the stack.
+    // year_2024::day_16::SOLVER,
     year_2024::day_15::SOLVER,
     year_2024::day_14::SOLVER,
     year_2024::day_13::SOLVER,
