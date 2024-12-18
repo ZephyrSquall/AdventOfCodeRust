@@ -4,20 +4,18 @@ pub const SOLVER: Solver = Solver {
     year: 2024,
     day: 18,
     title: "RAM Run",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
-    solve(input, 70, 70, 1024)
+    solve_1_with_grid(input, 70, 70, 1024)
 }
 
-fn solve(input: &str, width: usize, height: usize, fallen_bytes: usize) -> Solution {
-    #[derive(PartialEq)]
-    struct Position {
-        x: usize,
-        y: usize,
-    }
+fn solve_2(input: &str) -> Solution {
+    solve_2_with_grid(input, 70, 70)
+}
 
+fn solve_1_with_grid(input: &str, width: usize, height: usize, fallen_bytes: usize) -> Solution {
     // true represents a safe byte, false represents a corrupted byte. Note that valid x values for
     // the bytes includes the width and valid y values for the bytes include the height, so the
     // lengths are actually width + 1 and height + 1.
@@ -39,6 +37,47 @@ fn solve(input: &str, width: usize, height: usize, fallen_bytes: usize) -> Solut
         bytes[y][x] = false;
     }
 
+    let shortest_path = a_star(&bytes).expect("A valid path should have been found");
+    Solution::USize(shortest_path)
+}
+
+fn solve_2_with_grid(input: &str, width: usize, height: usize) -> Solution {
+    let mut bytes = vec![vec![true; width + 1]; height + 1];
+
+    // Corrupt squares one at a time. After each corruption, check if the A* algorithm can find a
+    // path to the end. If not, return the coordinates of the byte that just fell.
+    for line in input.lines() {
+        let mut char_iter = line.split(',');
+        let x = char_iter
+            .next()
+            .expect("Line should have first value")
+            .parse::<usize>()
+            .expect("First value should be a number");
+        let y = char_iter
+            .next()
+            .expect("Line should have second value")
+            .parse::<usize>()
+            .expect("Second value should be a number");
+        bytes[y][x] = false;
+
+        if a_star(&bytes).is_none() {
+            return Solution::Str(line);
+        }
+    }
+
+    panic!("The path to the end should have been blocked");
+}
+
+fn a_star(bytes: &[Vec<bool>]) -> Option<usize> {
+    #[derive(PartialEq)]
+    struct Position {
+        x: usize,
+        y: usize,
+    }
+
+    let width = bytes[0].len() - 1;
+    let height = bytes.len() - 1;
+
     // Use the A* algorithm to find the shortest path from (0, 0) to (width, height).
     let mut open_set = Vec::with_capacity(width * height);
     open_set.push(Position { x: 0, y: 0 });
@@ -54,7 +93,7 @@ fn solve(input: &str, width: usize, height: usize, fallen_bytes: usize) -> Solut
     // sorted according to byte_f before each pop for now.
     while let Some(byte) = open_set.pop() {
         if byte.x == width && byte.y == height {
-            return Solution::USize(byte_g[height][width]);
+            return Some(byte_g[height][width]);
         }
 
         let mut neighbours = Vec::with_capacity(4);
@@ -104,7 +143,7 @@ fn solve(input: &str, width: usize, height: usize, fallen_bytes: usize) -> Solut
         open_set.sort_unstable_by(|a, b| byte_f[a.y][a.x].cmp(&byte_f[b.y][b.x]).reverse());
     }
 
-    panic!("A path to the end should have been found");
+    None
 }
 
 #[cfg(test)]
@@ -114,7 +153,7 @@ mod test {
     #[test]
     fn example1_1() {
         assert_eq!(
-            solve(
+            solve_1_with_grid(
                 "\
 5,4
 4,2
@@ -146,6 +185,43 @@ mod test {
                 12
             ),
             Solution::U8(22)
+        );
+    }
+
+    #[test]
+    fn example2_1() {
+        assert_eq!(
+            solve_2_with_grid(
+                "\
+5,4
+4,2
+4,5
+3,0
+2,1
+6,3
+2,4
+1,5
+0,6
+3,3
+2,6
+5,1
+1,2
+5,5
+2,5
+6,5
+1,4
+0,4
+6,4
+1,1
+6,1
+1,0
+0,5
+1,6
+2,0",
+                6,
+                6,
+            ),
+            Solution::Str("6,1")
         );
     }
 }
