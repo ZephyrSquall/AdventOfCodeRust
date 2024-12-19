@@ -1,5 +1,8 @@
 use crate::solver::{Solution, Solver};
 
+// Temporarily allow dead code, as this solver is disabled for now for taking several minutes to
+// run. It will be re-enabled once a more optimized solution is found.
+#[allow(dead_code)]
 pub const SOLVER: Solver = Solver {
     year: 2024,
     day: 18,
