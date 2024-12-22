@@ -1,7 +1,6 @@
 use crate::solver::{Solution, Solver};
+use std::cmp::min;
 
-// Temporarily allow dead code, as this solver is disabled for now due to being incomplete.
-#[allow(dead_code)]
 pub const SOLVER: Solver = Solver {
     year: 2024,
     day: 21,
@@ -9,11 +8,6 @@ pub const SOLVER: Solver = Solver {
     part_solvers: &[solve_1],
 };
 
-// This solver currently produces the correct answer for the examples in the puzzle description, but
-// the incorrect answer for my puzzle input. I am unable to discern any kind of fundamental
-// difference between the examples and my puzzle input, so I am currently clueless about how any
-// kind of error could be introduced only in my puzzle input. As such, this puzzle has me stumped,
-// so I'm moving on for now.
 fn solve_1(input: &str) -> Solution {
     struct Position {
         x: i32,
@@ -65,15 +59,19 @@ fn solve_1(input: &str) -> Solution {
                 NumericButton::A => Position { x: 2, y: 3 },
             }
         }
-        // Find the difference between this position and the next one, determine a sequence of
-        // button presses required to go to the next position, and append them to the end of the
-        // current button sequence. Ensure that the minimum distance is traveled and that
-        // horizontal/vertical button presses don't alternate except at a single corner in the path
-        // so that the minimum button presses are added.
-        fn add_directional_buttons_to_go_to(
+        // Find a sequence of directional button presses that will cause the robot in front of the
+        // numeric keypad to press the next numeric button in the minimum number of moves, and
+        // append this to each possible input sequence. To minimize the button presses, the robot in
+        // front of the numeric keypad always moves vertically and moves horizontally at most once
+        // between button presses. This still allows for two possibilities of how to reach the
+        // button when the robot in front of the numeric keypad needs to move diagonally (unless one
+        // option would pass over the gap), so if this is the case, each possible input sequence
+        // will be duplicated, with one of each duplicated input sequence extended with the first
+        // possibility and the other duplicated input sequence extended with the other possibility.
+        fn extend_input_sequences_to_go_to(
             &self,
             next: &NumericButton,
-            directional_button_sequence: &mut Vec<DirectionalButton>,
+            input_sequences: &mut Vec<Vec<DirectionalButton>>,
         ) {
             let self_position = self.get_position();
             let next_position = next.get_position();
@@ -93,24 +91,78 @@ fn solve_1(input: &str) -> Solution {
                 DirectionalButton::Down
             };
 
-            // Move horizontally first, unless the arm is currently on the last row, in which case
-            // move vertically first to avoid ever aiming at the blank space.
-            if self_position.y == 3 {
+            let mut input_extensions = Vec::with_capacity(2);
+            // If the next position is exactly aligned horizontally or vertically with the current
+            // position, simply add the straight line steps there to every possible input sequence.
+            if position_diff.x == 0 {
+                let mut input_extension = Vec::with_capacity(4);
                 for _ in 0..position_diff.y.abs() {
-                    directional_button_sequence.push(vertical_direction.clone());
+                    input_extension.push(vertical_direction.clone());
                 }
+                input_extension.push(DirectionalButton::A);
+                input_extensions.push(input_extension);
+            } else if position_diff.y == 0 {
+                let mut input_extension = Vec::with_capacity(3);
                 for _ in 0..position_diff.x.abs() {
-                    directional_button_sequence.push(horizontal_direction.clone());
+                    input_extension.push(horizontal_direction.clone());
                 }
+                input_extension.push(DirectionalButton::A);
+                input_extensions.push(input_extension);
             } else {
-                for _ in 0..position_diff.x.abs() {
-                    directional_button_sequence.push(horizontal_direction.clone());
+                // Otherwise, add both the possibility of going horizontally then vertically, or
+                // vertically then horizontally, unless this would cause the path to go over the
+                // gap.
+
+                // Add the sequence when moving horizontally then vertically, unless starting in the
+                // last row and ending in the first column.
+                if !(self_position.y == 3 && next_position.x == 0) {
+                    let mut input_extension = Vec::with_capacity(6);
+                    for _ in 0..position_diff.x.abs() {
+                        input_extension.push(horizontal_direction.clone());
+                    }
+                    for _ in 0..position_diff.y.abs() {
+                        input_extension.push(vertical_direction.clone());
+                    }
+                    input_extension.push(DirectionalButton::A);
+                    input_extensions.push(input_extension);
                 }
-                for _ in 0..position_diff.y.abs() {
-                    directional_button_sequence.push(vertical_direction.clone());
+
+                // Add the sequence when moving vertically then horizontally, unless starting in the
+                // first column and ending in the last row.
+                if !(self_position.x == 0 && next_position.y == 3) {
+                    let mut input_extension = Vec::with_capacity(6);
+                    for _ in 0..position_diff.y.abs() {
+                        input_extension.push(vertical_direction.clone());
+                    }
+                    for _ in 0..position_diff.x.abs() {
+                        input_extension.push(horizontal_direction.clone());
+                    }
+
+                    input_extension.push(DirectionalButton::A);
+                    input_extensions.push(input_extension);
                 }
             }
-            directional_button_sequence.push(DirectionalButton::A);
+
+            // There can either be one or two input extensions. If there is one, simply append it to
+            // each input sequence. If there are two, clone the input sequences, append the first
+            // input extension to each original input sequence, append the second input extension to
+            // each cloned input sequence, then combine the original and cloned input sequences.
+            if input_extensions.len() == 2 {
+                let mut input_sequences_clone = input_sequences.clone();
+
+                for input_sequence in &mut *input_sequences {
+                    input_sequence.extend_from_slice(&input_extensions[0]);
+                }
+
+                for input_sequence_clone in &mut input_sequences_clone {
+                    input_sequence_clone.extend_from_slice(&input_extensions[1]);
+                    input_sequences.push(input_sequence_clone.clone());
+                }
+            } else {
+                for input_sequence in input_sequences {
+                    input_sequence.extend_from_slice(&input_extensions[0]);
+                }
+            }
         }
     }
 
@@ -134,10 +186,10 @@ fn solve_1(input: &str) -> Solution {
         }
         // This is almost the same as the corresponding method for numeric buttons, except the type
         // of the buttons and the position of the blank space are different.
-        fn add_directional_buttons_to_go_to(
+        fn extend_input_sequences_to_go_to(
             &self,
             next: &DirectionalButton,
-            directional_button_sequence: &mut Vec<DirectionalButton>,
+            input_sequences: &mut Vec<Vec<DirectionalButton>>,
         ) {
             let self_position = self.get_position();
             let next_position = next.get_position();
@@ -157,24 +209,63 @@ fn solve_1(input: &str) -> Solution {
                 DirectionalButton::Down
             };
 
-            // Move horizontally first, unless the arm is currently on the first row, in which case
-            // move vertically first to avoid ever aiming at the blank space.
-            if self_position.y == 0 {
+            let mut input_extensions = Vec::with_capacity(2);
+            if position_diff.x == 0 {
+                let mut input_extension = Vec::with_capacity(2);
                 for _ in 0..position_diff.y.abs() {
-                    directional_button_sequence.push(vertical_direction.clone());
+                    input_extension.push(vertical_direction.clone());
                 }
+                input_extension.push(DirectionalButton::A);
+                input_extensions.push(input_extension);
+            } else if position_diff.y == 0 {
+                let mut input_extension = Vec::with_capacity(3);
                 for _ in 0..position_diff.x.abs() {
-                    directional_button_sequence.push(horizontal_direction.clone());
+                    input_extension.push(horizontal_direction.clone());
                 }
+                input_extension.push(DirectionalButton::A);
+                input_extensions.push(input_extension);
             } else {
-                for _ in 0..position_diff.x.abs() {
-                    directional_button_sequence.push(horizontal_direction.clone());
+                if !(self_position.y == 0 && next_position.x == 0) {
+                    let mut input_extension = Vec::with_capacity(4);
+                    for _ in 0..position_diff.x.abs() {
+                        input_extension.push(horizontal_direction.clone());
+                    }
+                    for _ in 0..position_diff.y.abs() {
+                        input_extension.push(vertical_direction.clone());
+                    }
+                    input_extension.push(DirectionalButton::A);
+                    input_extensions.push(input_extension);
                 }
-                for _ in 0..position_diff.y.abs() {
-                    directional_button_sequence.push(vertical_direction.clone());
+                if !(self_position.x == 0 && next_position.y == 0) {
+                    let mut input_extension = Vec::with_capacity(4);
+                    for _ in 0..position_diff.y.abs() {
+                        input_extension.push(vertical_direction.clone());
+                    }
+                    for _ in 0..position_diff.x.abs() {
+                        input_extension.push(horizontal_direction.clone());
+                    }
+
+                    input_extension.push(DirectionalButton::A);
+                    input_extensions.push(input_extension);
                 }
             }
-            directional_button_sequence.push(DirectionalButton::A);
+
+            if input_extensions.len() == 2 {
+                let mut input_sequences_clone = input_sequences.clone();
+
+                for input_sequence in &mut *input_sequences {
+                    input_sequence.extend_from_slice(&input_extensions[0]);
+                }
+
+                for input_sequence_clone in &mut input_sequences_clone {
+                    input_sequence_clone.extend_from_slice(&input_extensions[1]);
+                    input_sequences.push(input_sequence_clone.clone());
+                }
+            } else {
+                for input_sequence in input_sequences {
+                    input_sequence.extend_from_slice(&input_extensions[0]);
+                }
+            }
         }
     }
 
@@ -182,54 +273,75 @@ fn solve_1(input: &str) -> Solution {
     // For each line, determine its complexity.
     for line in input.lines() {
         // Get the desired sequence of numeric button presses.
-        let target_numeric_buttons = line.chars().map(NumericButton::new).collect::<Vec<_>>();
+        let output_numeric_buttons = line.chars().map(NumericButton::new).collect::<Vec<_>>();
         // Get the numeric part of the line.
         let numeric_part = line
             .replace('A', "")
             .parse::<usize>()
             .expect("Line should only contain digits after removing \"A\"s");
 
-        // Get a sequence of button presses on the first directional keypad that inputs the numeric
-        // sequence on the numeric keypad.
+        // Get each possible sequence of button presses on the first directional keypad that inputs
+        // the numeric sequence on the numeric keypad.
         let mut last_numeric_button = NumericButton::A;
-        let mut first_target_directional_buttons = Vec::new();
-        for target_numeric_button in target_numeric_buttons {
-            last_numeric_button.add_directional_buttons_to_go_to(
+        let mut numeric_input_sequences = vec![Vec::new()];
+        for target_numeric_button in output_numeric_buttons {
+            last_numeric_button.extend_input_sequences_to_go_to(
                 &target_numeric_button,
-                &mut first_target_directional_buttons,
+                &mut numeric_input_sequences,
             );
 
             last_numeric_button = target_numeric_button;
         }
 
-        // Get a sequence of button presses on the second directional keypad that inputs the
-        // directional sequence on the first directional keypad.
-        let mut last_directional_button = DirectionalButton::A;
-        let mut second_target_directional_buttons = Vec::new();
-        for target_directional_button in first_target_directional_buttons {
-            last_directional_button.add_directional_buttons_to_go_to(
-                &target_directional_button,
-                &mut second_target_directional_buttons,
-            );
+        // Get each possible sequence of button presses on the second directional keypad that inputs
+        // one of the directional sequences on the first directional keypad.
+        let mut first_directional_input_sequences = Vec::new();
+        for numeric_input_sequence in numeric_input_sequences {
+            let mut last_directional_button = DirectionalButton::A;
+            let mut directional_input_sequences = vec![Vec::new()];
 
-            last_directional_button = target_directional_button;
+            for target_directional_button in numeric_input_sequence {
+                last_directional_button.extend_input_sequences_to_go_to(
+                    &target_directional_button,
+                    &mut directional_input_sequences,
+                );
+
+                last_directional_button = target_directional_button;
+            }
+
+            for directional_input_sequence in directional_input_sequences {
+                first_directional_input_sequences.push(directional_input_sequence);
+            }
         }
 
-        // Get a sequence of button presses on the third directional keypad that inputs the
-        // directional sequence on the second directional keypad.
-        let mut last_directional_button = DirectionalButton::A;
-        let mut third_target_directional_buttons = Vec::new();
-        for target_directional_button in second_target_directional_buttons {
-            last_directional_button.add_directional_buttons_to_go_to(
-                &target_directional_button,
-                &mut third_target_directional_buttons,
-            );
+        // Get each possible sequence of button presses on the third directional keypad that inputs
+        // one of the directional sequences on the second directional keypad.
+        let mut second_directional_input_sequences = Vec::new();
+        for first_directional_input_sequence in first_directional_input_sequences {
+            let mut last_directional_button = DirectionalButton::A;
+            let mut directional_input_sequences = vec![Vec::new()];
 
-            last_directional_button = target_directional_button;
+            for target_directional_button in first_directional_input_sequence {
+                last_directional_button.extend_input_sequences_to_go_to(
+                    &target_directional_button,
+                    &mut directional_input_sequences,
+                );
+
+                last_directional_button = target_directional_button;
+            }
+
+            for directional_input_sequence in directional_input_sequences {
+                second_directional_input_sequences.push(directional_input_sequence);
+            }
         }
 
-        // Get the length of the third directional button sequence
-        let shortest_sequence_length = third_target_directional_buttons.len();
+        // Get the shortest length of the second directional input sequence (the input that is typed
+        // in at the third directional keypad)
+        let shortest_sequence_length = second_directional_input_sequences
+            .iter()
+            .fold(usize::MAX, |acc, input_sequence| {
+                min(acc, input_sequence.len())
+            });
         // Get the complexity by multiplying the numeric part with the shortest sequence length.
         complexity_sum += shortest_sequence_length * numeric_part;
     }
