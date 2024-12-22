@@ -63,7 +63,8 @@ pub mod year_2016;
 pub mod year_2017;
 pub mod year_2024;
 
-pub const SOLVERS: [Solver; 74] = [
+pub const SOLVERS: [Solver; 75] = [
+    year_2024::day_22::SOLVER,
     // Disable this solver for now, as it is incomplete and currently gives an incorrect answer.
     // year_2024::day_21::SOLVER,
     year_2024::day_20::SOLVER,
