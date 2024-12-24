@@ -1,7 +1,7 @@
 use crate::solver::{Solution, Solver};
 use itertools::{repeat_n, Itertools};
 use rustc_hash::{FxHashMap, FxHashSet};
-use std::cmp::max;
+use std::{cmp::max, collections::BTreeSet};
 
 pub const SOLVER: Solver = Solver {
     year: 2024,
@@ -43,10 +43,10 @@ fn solve_1(input: &str) -> Solution {
 // haven't found any faults, so for now I am stumped as to how I am somehow wrongly verifying at
 // least two incorrect gates.
 fn solve_2(input: &str) -> Solution {
-    let (initial_wire_values, gates) = get_wire_values_and_gates(input);
-    // It is useful to have a set of references to each gate, to make calculating differences with
-    // other sets of references to gates easier.
-    let gate_refs = gates.iter().collect::<FxHashSet<_>>();
+    let (initial_wire_values, mut gates) = get_wire_values_and_gates(input);
+
+    let mut verified_gates = FxHashSet::default();
+    let mut swapped_output_wires = BTreeSet::new();
 
     // Get how many binary digits are in the input numbers.
     let mut largest_input_index = 0;
@@ -60,6 +60,10 @@ fn solve_2(input: &str) -> Solution {
         }
     }
 
+    // Track all preceding wires so they can be set for the carry-in digit.
+    let mut preceding_x_input_wires: Vec<String> = Vec::new();
+    let mut preceding_y_input_wires: Vec<String> = Vec::new();
+
     // For every gate, we want to check that it gives the correct output digit according to
     // full-adder logic. This means that the output digit for a given position is equal to the XOR
     // of the two input digits for that position and the carry-in digit. The carry-in digit can't be
@@ -67,14 +71,14 @@ fn solve_2(input: &str) -> Solution {
     // input digits is false (as no carry would ever occur), or guaranteed to be true if every digit
     // before the current input digits is true (as a carry would happen on every digit). In order to
     // confirm whether a given digit is working correctly, all eight combinations of the three input
-    // digits are tested and checked to see if they provide the correct output digit. If the digit
-    // is correct, all gates used to calculate that digit must have the correct output, so add them
-    // to verified gates.
-    let mut verified_gates = FxHashSet::default();
-    let mut preceding_x_input_wires: Vec<String> = Vec::new();
-    let mut preceding_y_input_wires: Vec<String> = Vec::new();
-    let mut preceding_output_wires = Vec::new();
-
+    // digits (first input wire, second input wire, and carry in) are tested and checked to see if
+    // they provide the correct output digit.
+    //
+    // If the digit is correct, all gates used to calculate that digit must have the correct output,
+    // so add them to verified gates. If the digit is not correct, iterate over every possible pair
+    // of unverified gates while ensuring at least one of those gates were involved in calculating
+    // the digit, and for each of these pairs, check if swapping them gives the correct digit. If it
+    // does, replicate the swap in the actual gate data and record the swapped wires.
     for input_index in 0..=largest_input_index {
         // "{input_index:0>2}" in a format string prints the input_index's value but padded with
         // leading zeroes to be at least two characters wide.
@@ -87,7 +91,7 @@ fn solve_2(input: &str) -> Solution {
         let mut involved_outputs = vec![output_wire.as_str()];
         while let Some(output_wire) = involved_outputs.pop() {
             let gate = gates.iter().find(|gate| gate.output_wire == output_wire).expect("Every wire that doesn't begin with x or y should have a corresponding gate that outputs it.");
-            involved_gates.insert(gate);
+            involved_gates.insert(gate.clone());
 
             if !(gate.first_wire.starts_with('x') || gate.first_wire.starts_with('y')) {
                 involved_outputs.push(gate.first_wire);
@@ -142,6 +146,132 @@ fn solve_2(input: &str) -> Solution {
 
         if is_digit_valid {
             verified_gates.extend(involved_gates);
+        } else {
+            // This for loop takes the set of every gate involved in this loop and the set of all
+            // gates, gets the gates in those sets that are not also in verified gates, and then
+            // iterates over every possible pair of these sets by iterating over their cartesian
+            // product.
+            'check_new_gate_pair: for (involved_gate, unverified_gate) in involved_gates
+                .difference(&verified_gates)
+                .cartesian_product(gates.difference(&verified_gates))
+            {
+                // Make sure the gates aren't equal.
+                if *involved_gate != *unverified_gate {
+                    // Make a temporary copy of the gates set, remove the current pair of gates form
+                    // them, and add these gates again with their output wires swapped.
+                    let mut new_gates = gates.clone();
+                    new_gates.retain(|gate| {
+                        gate.output_wire != involved_gate.output_wire
+                            && gate.output_wire != unverified_gate.output_wire
+                    });
+                    new_gates.insert(Gate {
+                        operation: involved_gate.operation.clone(),
+                        first_wire: involved_gate.first_wire,
+                        second_wire: involved_gate.second_wire,
+                        output_wire: unverified_gate.output_wire,
+                    });
+                    new_gates.insert(Gate {
+                        operation: unverified_gate.operation.clone(),
+                        first_wire: unverified_gate.first_wire,
+                        second_wire: unverified_gate.second_wire,
+                        output_wire: involved_gate.output_wire,
+                    });
+
+                    // Most of the following logic replicates the logic for checking for digit
+                    // correctness, but some additional checks need to be put in place as swapping
+                    // gate outputs creates the possibility of loops or removing the path to the
+                    // output digit.
+
+                    let mut involved_gates = FxHashSet::default();
+                    let mut involved_outputs = vec![output_wire.as_str()];
+                    // Track outputs that have been found before. If the same output is found again,
+                    // a loop has been created.
+                    let mut found_outputs = FxHashSet::default();
+                    while let Some(output_wire) = involved_outputs.pop() {
+                        if found_outputs.contains(output_wire) {
+                            continue 'check_new_gate_pair;
+                        }
+                        found_outputs.insert(output_wire);
+
+                        let gate = new_gates.iter().find(|gate| gate.output_wire == output_wire).expect("Every wire that doesn't begin with x or y should have a corresponding gate that outputs it.");
+                        involved_gates.insert(gate);
+
+                        if !(gate.first_wire.starts_with('x') || gate.first_wire.starts_with('y')) {
+                            involved_outputs.push(gate.first_wire);
+                        }
+                        if !(gate.second_wire.starts_with('x') || gate.second_wire.starts_with('y'))
+                        {
+                            involved_outputs.push(gate.second_wire);
+                        }
+                    }
+
+                    for values in repeat_n([false, true], 3).multi_cartesian_product() {
+                        let expected_output_value = if input_index > 0 {
+                            values[0] ^ values[1] ^ values[2]
+                        } else {
+                            values[0] ^ values[1]
+                        };
+
+                        let mut wire_values = FxHashMap::default();
+                        wire_values.insert(x_input_wire.as_str(), values[0]);
+                        wire_values.insert(y_input_wire.as_str(), values[1]);
+                        for preceding_x_input_wire in &preceding_x_input_wires {
+                            wire_values.insert(preceding_x_input_wire.as_str(), values[2]);
+                        }
+                        for preceding_y_input_wire in &preceding_y_input_wires {
+                            wire_values.insert(preceding_y_input_wire.as_str(), values[2]);
+                        }
+
+                        let mut pending_gates = involved_gates.clone();
+                        while !wire_values.contains_key(&output_wire.as_str()) {
+                            // Track the length of the pending gates on each iteration. If it
+                            // doesn't reduce on any step, the pending gates don't have a path to
+                            // the output digit.
+                            let starting_len = pending_gates.len();
+                            pending_gates.retain(|gate| !gate.execute(&mut wire_values));
+                            if pending_gates.len() == starting_len {
+                                continue 'check_new_gate_pair;
+                            }
+                        }
+
+                        if *wire_values.get(&output_wire.as_str()).expect(
+                            "This key should have just been inserted in the preceding while loop",
+                        ) != expected_output_value
+                        {
+                            continue 'check_new_gate_pair;
+                        }
+                    }
+
+                    // If none of the "continue 'check_new_gate_pair;" statements were reached and
+                    // code execution survived to this point, then it has been verified that the
+                    // current pair of gates are the ones that need to be swapped. Make the swap in
+                    // the real gates set, and remember the swapped wires.
+                    swapped_output_wires.insert(involved_gate.output_wire);
+                    swapped_output_wires.insert(unverified_gate.output_wire);
+
+                    let first_new_gate = Gate {
+                        operation: involved_gate.operation.clone(),
+                        first_wire: involved_gate.first_wire,
+                        second_wire: involved_gate.second_wire,
+                        output_wire: unverified_gate.output_wire,
+                    };
+                    let second_new_gate = Gate {
+                        operation: unverified_gate.operation.clone(),
+                        first_wire: unverified_gate.first_wire,
+                        second_wire: unverified_gate.second_wire,
+                        output_wire: involved_gate.output_wire,
+                    };
+
+                    gates.retain(|gate| {
+                        gate.output_wire != first_new_gate.output_wire
+                            && gate.output_wire != second_new_gate.output_wire
+                    });
+                    gates.insert(first_new_gate);
+                    gates.insert(second_new_gate);
+
+                    break;
+                }
+            }
         }
 
         // Do not push the preceding values for the last iteration, as these values need to be
@@ -150,7 +280,6 @@ fn solve_2(input: &str) -> Solution {
             preceding_x_input_wires.push(x_input_wire);
             preceding_y_input_wires.push(y_input_wire);
         }
-        preceding_output_wires.push(output_wire);
     }
 
     // Calculate the final carry-out digit to ensure it's correct. The inputs are the same as for
@@ -164,7 +293,7 @@ fn solve_2(input: &str) -> Solution {
     let mut involved_outputs = vec![output_wire.as_str()];
     while let Some(output_wire) = involved_outputs.pop() {
         let gate = gates.iter().find(|gate| gate.output_wire == output_wire).expect("Every wire that doesn't begin with x or y should have a corresponding gate that outputs it.");
-        involved_gates.insert(gate);
+        involved_gates.insert(gate.clone());
 
         if !(gate.first_wire.starts_with('x')
             || gate.first_wire.starts_with('y')
@@ -183,6 +312,8 @@ fn solve_2(input: &str) -> Solution {
     let mut is_final_carry_valid = true;
 
     for values in repeat_n([false, true], 3).multi_cartesian_product() {
+        // The final carry is expected to be true if at least two or more of the input digits are
+        // true.
         let expected_final_carry_value =
             (values[0] && values[1]) || (values[2] && (values[0] ^ values[1]));
 
@@ -215,20 +346,119 @@ fn solve_2(input: &str) -> Solution {
         }
     }
 
-    if is_final_carry_valid {
-        verified_gates.extend(involved_gates);
+    if !is_final_carry_valid {
+        // Do the same check for gates that need to be swapped for the final carry. This is the same
+        // logic for any other digit except for the different calculation for the expected value of
+        // the final carry digit.
+        'check_new_gate_pair: for (involved_gate, unverified_gate) in involved_gates
+            .difference(&verified_gates)
+            .cartesian_product(gates.difference(&verified_gates))
+        {
+            if *involved_gate != *unverified_gate {
+                let mut new_gates = gates.clone();
+                new_gates.retain(|gate| {
+                    gate.output_wire != involved_gate.output_wire
+                        && gate.output_wire != unverified_gate.output_wire
+                });
+                new_gates.insert(Gate {
+                    operation: involved_gate.operation.clone(),
+                    first_wire: involved_gate.first_wire,
+                    second_wire: involved_gate.second_wire,
+                    output_wire: unverified_gate.output_wire,
+                });
+                new_gates.insert(Gate {
+                    operation: unverified_gate.operation.clone(),
+                    first_wire: unverified_gate.first_wire,
+                    second_wire: unverified_gate.second_wire,
+                    output_wire: involved_gate.output_wire,
+                });
+
+                let mut involved_gates = FxHashSet::default();
+                let mut involved_outputs = vec![output_wire.as_str()];
+                let mut found_outputs = FxHashSet::default();
+                while let Some(output_wire) = involved_outputs.pop() {
+                    if found_outputs.contains(output_wire) {
+                        continue 'check_new_gate_pair;
+                    }
+                    found_outputs.insert(output_wire);
+
+                    let gate = new_gates.iter().find(|gate| gate.output_wire == output_wire).expect("Every wire that doesn't begin with x or y should have a corresponding gate that outputs it.");
+                    involved_gates.insert(gate);
+
+                    if !(gate.first_wire.starts_with('x') || gate.first_wire.starts_with('y')) {
+                        involved_outputs.push(gate.first_wire);
+                    }
+                    if !(gate.second_wire.starts_with('x') || gate.second_wire.starts_with('y')) {
+                        involved_outputs.push(gate.second_wire);
+                    }
+                }
+
+                for values in repeat_n([false, true], 3).multi_cartesian_product() {
+                    let expected_final_carry_value =
+                        (values[0] && values[1]) || (values[2] && (values[0] ^ values[1]));
+
+                    let mut wire_values = FxHashMap::default();
+                    wire_values.insert(x_input_wire.as_str(), values[0]);
+                    wire_values.insert(y_input_wire.as_str(), values[1]);
+                    for preceding_x_input_wire in &preceding_x_input_wires {
+                        wire_values.insert(preceding_x_input_wire.as_str(), values[2]);
+                    }
+                    for preceding_y_input_wire in &preceding_y_input_wires {
+                        wire_values.insert(preceding_y_input_wire.as_str(), values[2]);
+                    }
+
+                    let mut pending_gates = involved_gates.clone();
+                    while !wire_values.contains_key(&output_wire.as_str()) {
+                        let starting_len = pending_gates.len();
+                        pending_gates.retain(|gate| !gate.execute(&mut wire_values));
+                        if pending_gates.len() == starting_len {
+                            continue 'check_new_gate_pair;
+                        }
+                    }
+
+                    if *wire_values.get(&output_wire.as_str()).expect(
+                        "This key should have just been inserted in the preceding while loop",
+                    ) != expected_final_carry_value
+                    {
+                        continue 'check_new_gate_pair;
+                    }
+                }
+
+                swapped_output_wires.insert(involved_gate.output_wire);
+                swapped_output_wires.insert(unverified_gate.output_wire);
+
+                let first_new_gate = Gate {
+                    operation: involved_gate.operation.clone(),
+                    first_wire: involved_gate.first_wire,
+                    second_wire: involved_gate.second_wire,
+                    output_wire: unverified_gate.output_wire,
+                };
+                let second_new_gate = Gate {
+                    operation: unverified_gate.operation.clone(),
+                    first_wire: unverified_gate.first_wire,
+                    second_wire: unverified_gate.second_wire,
+                    output_wire: involved_gate.output_wire,
+                };
+
+                gates.retain(|gate| {
+                    gate.output_wire != first_new_gate.output_wire
+                        && gate.output_wire != second_new_gate.output_wire
+                });
+                gates.insert(first_new_gate);
+                gates.insert(second_new_gate);
+
+                break;
+            }
+        }
     }
 
-    // As this answer is obviously incorrect for showing the wrong number of gates, for now I simply
-    // print the list of gates and don't bother with sorting them for my final puzzle output.
-    for gate in gate_refs.difference(&verified_gates) {
-        println!("Potential wrong gate: {gate:?}");
-    }
-
-    Solution::U64(0)
+    // Get the names of output wires that have been swapped (which are automatically sorted
+    // alphabetically due to being stored in a BTreeSet) and join them to create the final output.
+    let joined_swapped_output_wires = swapped_output_wires.iter().join(",");
+    Solution::String(joined_swapped_output_wires)
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 struct Gate<'a, 'b, 'c> {
     operation: GateOperation,
     first_wire: &'a str,
@@ -258,7 +488,7 @@ impl<'a, 'b, 'c> Gate<'a, 'b, 'c> {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 enum GateOperation {
     And,
     Or,
@@ -403,4 +633,7 @@ tnw OR pbm -> gnj"
             Solution::U16(2024)
         );
     }
+
+    // The example for part 2 is omitted as it uses bitwise AND instead of summation as the
+    // operation the gates are trying to implement.
 }
