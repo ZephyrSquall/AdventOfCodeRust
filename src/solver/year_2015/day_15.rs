@@ -1,7 +1,7 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{Solution, AdventOfCode};
 use std::cmp::max;
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2015,
     day: 15,
     title: "Science for Hungry People",

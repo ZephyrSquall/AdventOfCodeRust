@@ -1,9 +1,9 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{AdventOfCode, Solution};
 use itertools::{repeat_n, Itertools};
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::{cmp::max, collections::BTreeSet};
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2024,
     day: 24,
     title: "Crossed Wires",

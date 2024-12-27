@@ -1,7 +1,7 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{AdventOfCode, Solution};
 use itertools::Itertools;
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2024,
     day: 17,
     title: "Chronospatial Computer",
@@ -363,7 +363,7 @@ Register C: 0
 
 Program: 5,0,5,1,5,4"
             ),
-            Solution::Str("0,1,2")
+            Solution::String("0,1,2".to_string())
         );
     }
     #[test]
@@ -377,7 +377,7 @@ Register C: 0
 
 Program: 0,1,5,4,3,0"
             ),
-            Solution::Str("4,2,5,6,7,7,7,7,3,1,0")
+            Solution::String("4,2,5,6,7,7,7,7,3,1,0".to_string())
         );
     }
     #[test]
@@ -391,7 +391,7 @@ Register C: 0
 
 Program: 0,1,5,4,3,0"
             ),
-            Solution::Str("4,6,3,5,6,3,5,2,1,0")
+            Solution::String("4,6,3,5,6,3,5,2,1,0".to_string())
         );
     }
 

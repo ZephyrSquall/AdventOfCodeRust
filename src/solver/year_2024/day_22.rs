@@ -1,8 +1,8 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{AdventOfCode, Solution};
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::collections::VecDeque;
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2024,
     day: 22,
     title: "Monkey Market",

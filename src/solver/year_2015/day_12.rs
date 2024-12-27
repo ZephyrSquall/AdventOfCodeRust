@@ -1,7 +1,7 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{Solution, AdventOfCode};
 use std::str::Chars;
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2015,
     day: 12,
     title: "JSAbacusFramework.io",

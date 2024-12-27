@@ -1,7 +1,7 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{AdventOfCode, Solution};
 use core::str;
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2015,
     day: 11,
     title: "Corporate Policy",
@@ -89,10 +89,16 @@ mod test {
 
     #[test]
     fn example1_1() {
-        assert_eq!(solve_1("abcdefgh"), Solution::Str("abcdffaa"));
+        assert_eq!(
+            solve_1("abcdefgh"),
+            Solution::String("abcdffaa".to_string())
+        );
     }
     #[test]
     fn example1_2() {
-        assert_eq!(solve_1("ghijklmn"), Solution::Str("ghjaabcc"));
+        assert_eq!(
+            solve_1("ghijklmn"),
+            Solution::String("ghjaabcc".to_string())
+        );
     }
 }

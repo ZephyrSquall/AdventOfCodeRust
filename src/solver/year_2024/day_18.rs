@@ -1,9 +1,9 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{AdventOfCode, Solution};
 
 // Temporarily allow dead code, as this solver is disabled for now for taking several minutes to
 // run. It will be re-enabled once a more optimized solution is found.
 #[allow(dead_code)]
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2024,
     day: 18,
     title: "RAM Run",
@@ -64,7 +64,7 @@ fn solve_2_with_grid(input: &str, width: usize, height: usize) -> Solution {
         bytes[y][x] = false;
 
         if a_star(&bytes).is_none() {
-            return Solution::Str(line);
+            return Solution::String(line.to_string());
         }
     }
 
@@ -224,7 +224,7 @@ mod test {
                 6,
                 6,
             ),
-            Solution::Str("6,1")
+            Solution::String("6,1".to_string())
         );
     }
 }

@@ -1,8 +1,8 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{Solution, AdventOfCode};
 use itertools::Itertools;
 use rustc_hash::FxHashSet;
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2015,
     day: 13,
     title: "Knights of the Dinner Table",

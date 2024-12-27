@@ -1,7 +1,7 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{Solution, AdventOfCode};
 use rustc_hash::FxHashMap;
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2024,
     day: 1,
     title: "Historian Hysteria",

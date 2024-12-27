@@ -1,7 +1,7 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{Solution, AdventOfCode};
 use rustc_hash::FxHashSet;
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2015,
     day: 3,
     title: "Perfectly Spherical Houses in a Vacuum",

@@ -1,7 +1,7 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{Solution, AdventOfCode};
 use std::mem::swap;
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2016,
     day: 1,
     title: "No Time for a Taxicab",

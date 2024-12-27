@@ -1,9 +1,9 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{Solution, AdventOfCode};
 use std::cmp::{max, min};
 use std::collections::VecDeque;
 use std::mem::discriminant;
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2015,
     day: 22,
     title: "Wizard Simulator 20XX",

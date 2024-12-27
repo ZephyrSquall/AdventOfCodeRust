@@ -1,8 +1,8 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{AdventOfCode, Solution};
 use rustc_hash::FxHashMap;
 use std::cmp::{max_by_key, min_by_key};
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2016,
     day: 6,
     title: "Signals and Noise",
@@ -95,7 +95,7 @@ vrdear
 dvrsen
 enarar"
             ),
-            Solution::Str("easter")
+            Solution::String("easter".to_string())
         );
     }
 
@@ -121,7 +121,7 @@ vrdear
 dvrsen
 enarar"
             ),
-            Solution::Str("advent")
+            Solution::String("advent".to_string())
         );
     }
 }

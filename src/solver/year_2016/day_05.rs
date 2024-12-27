@@ -1,6 +1,6 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{AdventOfCode, Solution};
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2016,
     day: 5,
     title: "How About a Nice Game of Chess?",
@@ -88,12 +88,12 @@ mod test {
     #[ignore = "Finding the correct hashes takes about a minute in debug mode"]
     #[test]
     fn example1_1() {
-        assert_eq!(solve_1("abc"), Solution::Str("18f47a30"));
+        assert_eq!(solve_1("abc"), Solution::String("18f47a30".to_string()));
     }
 
     #[ignore = "Finding the correct hashes takes about a minute in debug mode"]
     #[test]
     fn example2_1() {
-        assert_eq!(solve_2("abc"), Solution::Str("05ace8e3"));
+        assert_eq!(solve_2("abc"), Solution::String("05ace8e3".to_string()));
     }
 }

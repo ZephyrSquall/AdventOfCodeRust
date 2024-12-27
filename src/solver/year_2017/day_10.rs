@@ -1,7 +1,7 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{AdventOfCode, Solution};
 use std::fmt::Write;
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2017,
     day: 10,
     title: "Knot Hash",
@@ -118,28 +118,28 @@ mod test {
     fn example2_1() {
         assert_eq!(
             solve_2(""),
-            Solution::Str("a2582a3a0e66e6e86e3812dcb672a272")
+            Solution::String("a2582a3a0e66e6e86e3812dcb672a272".to_string())
         );
     }
     #[test]
     fn example2_2() {
         assert_eq!(
             solve_2("AoC 2017"),
-            Solution::Str("33efeb34ea91902bb2f59c9920caa6cd")
+            Solution::String("33efeb34ea91902bb2f59c9920caa6cd".to_string())
         );
     }
     #[test]
     fn example2_3() {
         assert_eq!(
             solve_2("1,2,3"),
-            Solution::Str("3efbe78a8d82f29979031a4aa0b16a9d")
+            Solution::String("3efbe78a8d82f29979031a4aa0b16a9d".to_string())
         );
     }
     #[test]
     fn example2_4() {
         assert_eq!(
             solve_2("1,2,4"),
-            Solution::Str("63960835bcdc130f0b66d7ff4f6a5a8e")
+            Solution::String("63960835bcdc130f0b66d7ff4f6a5a8e".to_string())
         );
     }
 }

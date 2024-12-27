@@ -1,60 +1,41 @@
-use std::fmt;
+use puzzle_results_table::solver::{Result, Solution, Solver};
+use std::{fs, time::Instant};
 
-pub struct Solver<'a> {
+pub struct AdventOfCode {
     pub year: u16,
     pub day: u8,
-    pub title: &'a str,
-    pub part_solvers: &'a [fn(input: &str) -> Solution],
+    pub title: &'static str,
+    pub part_solvers: &'static [fn(input: &str) -> Solution],
 }
 
-// This enum intentionally has dead code as the unused variants are likely to be used in tests and
-// future solvers.
-#[allow(dead_code)]
-#[derive(Debug)]
-pub enum Solution<'a> {
-    U8(u8),
-    U16(u16),
-    U32(u32),
-    U64(u64),
-    U128(u128),
-    USize(usize),
-    I8(i8),
-    I16(i16),
-    I32(i32),
-    I64(i64),
-    I128(i128),
-    ISize(isize),
-    Str(&'a str),
-    String(String),
-}
+impl Solver for AdventOfCode {
+    fn get_row_count(&self) -> usize {
+        self.part_solvers.len()
+    }
 
-impl<'a> fmt::Display for Solution<'a> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Solution::U8(solution) => solution.fmt(f),
-            Solution::U16(solution) => solution.fmt(f),
-            Solution::U32(solution) => solution.fmt(f),
-            Solution::U64(solution) => solution.fmt(f),
-            Solution::U128(solution) => solution.fmt(f),
-            Solution::USize(solution) => solution.fmt(f),
-            Solution::I8(solution) => solution.fmt(f),
-            Solution::I16(solution) => solution.fmt(f),
-            Solution::I32(solution) => solution.fmt(f),
-            Solution::I64(solution) => solution.fmt(f),
-            Solution::I128(solution) => solution.fmt(f),
-            Solution::ISize(solution) => solution.fmt(f),
-            Solution::Str(solution) => solution.fmt(f),
-            Solution::String(solution) => solution.fmt(f),
+    fn get_labels(&self, row: usize) -> Vec<String> {
+        match row {
+            0 => vec![
+                self.year.to_string(),
+                self.day.to_string(),
+                self.title.to_string(),
+                "1".to_string(),
+            ],
+            1 => vec![String::new(), String::new(), String::new(), "2".to_string()],
+            _ => panic!("Row number too great"),
         }
     }
-}
 
-// A solution is only intended to be used for printing in the results table. For this purpose, any
-// solutions that convert to the same string are equal. Note that testing for solution equality is
-// only intended for unit tests; this functionality isn't required by the runner.
-impl<'a> PartialEq for Solution<'a> {
-    fn eq(&self, other: &Self) -> bool {
-        self.to_string() == other.to_string()
+    fn execute(&self, row: usize) -> Result {
+        let file_path = format!("puzzle_inputs/{}/{:02}.txt", self.year, self.day);
+        let input = fs::read_to_string(&file_path).expect("Error reading file");
+        let part_solver = self.part_solvers[row];
+
+        let start = Instant::now();
+        let solution = part_solver(&input);
+        let duration = start.elapsed();
+
+        Result { solution, duration }
     }
 }
 
@@ -63,7 +44,7 @@ pub mod year_2016;
 pub mod year_2017;
 pub mod year_2024;
 
-pub const SOLVERS: [Solver; 79] = [
+pub const SOLVERS: [AdventOfCode; 79] = [
     year_2024::day_25::SOLVER,
     year_2024::day_24::SOLVER,
     year_2024::day_23::SOLVER,

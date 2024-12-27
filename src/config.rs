@@ -1,7 +1,13 @@
-use crate::runner::PuzzleDate;
+use crate::solver::AdventOfCode;
 use std::env::Args;
 
-//
+pub struct PuzzleDate {
+    pub year: u16,
+    pub day: Option<u8>,
+}
+
+pub const LABEL_HEADERS: [&str; 4] = ["Year", "Day", "Puzzle", "Part"];
+
 pub fn parse_arguments(mut args: Args) -> Vec<PuzzleDate> {
     // Discard the first argument, which is just the executable path.
     args.next();
@@ -57,4 +63,25 @@ pub fn parse_arguments(mut args: Args) -> Vec<PuzzleDate> {
     }
 
     puzzle_dates
+}
+
+// If puzzle_dates is empty, returns true on all solvers. Otherwise, returns true for solvers that
+// have at least one successful match, either to a year if a year without a day is specified, or to
+// a specific day if a year and day pair is specified.
+pub fn get_solver_predicate(puzzle_dates: Vec<PuzzleDate>) -> impl Fn(&AdventOfCode) -> bool {
+    move |solver: &AdventOfCode| {
+        if puzzle_dates.is_empty() {
+            return true;
+        }
+        for puzzle_date in &puzzle_dates {
+            if let Some(day) = puzzle_date.day {
+                if solver.year == puzzle_date.year && solver.day == day {
+                    return true;
+                }
+            } else if solver.year == puzzle_date.year {
+                return true;
+            }
+        }
+        false
+    }
 }

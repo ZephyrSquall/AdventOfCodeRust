@@ -1,6 +1,6 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{AdventOfCode, Solution};
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2016,
     day: 2,
     title: "Bathroom Security",
@@ -134,7 +134,7 @@ RRDDD
 LURDL
 UUUUD"
             ),
-            Solution::Str("5DB3")
+            Solution::String("5DB3".to_string())
         );
     }
 }

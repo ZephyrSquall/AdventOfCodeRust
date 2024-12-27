@@ -1,6 +1,6 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{AdventOfCode, Solution};
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2017,
     day: 19,
     title: "A Series of Tubes",
@@ -154,7 +154,7 @@ mod test {
      +B-+  +--+ 
                 "
             ),
-            Solution::Str("ABCDEF")
+            Solution::String("ABCDEF".to_string())
         );
     }
 

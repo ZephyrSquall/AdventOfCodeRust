@@ -1,4 +1,4 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{AdventOfCode, Solution};
 use itertools::Itertools;
 use rustc_hash::{FxHashMap, FxHashSet};
 use std::{
@@ -6,7 +6,7 @@ use std::{
     fmt::{Display, Formatter, Result},
 };
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2024,
     day: 23,
     title: "LAN Party",
@@ -318,7 +318,7 @@ wh-qp
 tb-vc
 td-yn"
             ),
-            Solution::Str("co,de,ka,ta")
+            Solution::String("co,de,ka,ta".to_string())
         );
     }
 }

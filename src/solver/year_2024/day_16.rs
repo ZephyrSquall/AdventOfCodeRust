@@ -1,11 +1,11 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{Solution, AdventOfCode};
 use std::cmp::min;
 
 // Temporarily allow dead code, as this solver had to be disabled for now to prevent stack overflows
 // when running all solvers. In the future, this solver will be refactored to not recurse as deeply
 // or use a different technique so that it can be reenabled.
 #[allow(dead_code)]
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2024,
     day: 16,
     title: "Reindeer Maze",

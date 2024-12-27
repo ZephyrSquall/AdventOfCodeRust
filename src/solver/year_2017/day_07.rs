@@ -1,6 +1,6 @@
-use crate::solver::{Solution, Solver};
+use crate::solver::{AdventOfCode, Solution};
 
-pub const SOLVER: Solver = Solver {
+pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2017,
     day: 7,
     title: "Recursive Circus",
@@ -31,7 +31,7 @@ fn solve_1(input: &str) -> Solution {
     // only program that is in programs but not above_programs.
     for program in programs {
         if !above_programs.contains(&program) {
-            return Solution::Str(program);
+            return Solution::String(program.to_string());
         }
     }
 
@@ -227,7 +227,7 @@ ugml (68) -> gyxo, ebii, jptl
 gyxo (61)
 cntj (57)"
             ),
-            Solution::Str("tknk")
+            Solution::String("tknk".to_string())
         );
     }
 
