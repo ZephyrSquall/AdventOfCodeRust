@@ -1,4 +1,5 @@
-use crate::solver::{Solution, AdventOfCode};
+use crate::solver::{AdventOfCode, Solution};
+use rayon::prelude::*;
 
 pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2015,
@@ -8,36 +9,41 @@ pub const SOLVER: AdventOfCode = AdventOfCode {
 };
 
 fn solve_1(input: &str) -> Solution {
-    let mut index = 0;
-    loop {
-        let mut hash_input = input.to_string();
-        hash_input.push_str(&index.to_string());
-        let hash = md5(&hash_input);
-        // Checking if the first 5 hexadecimal digits are 0 is equivalent to checking if the first
-        // 20 binary digits are 0. This can be easily tested by right-shifting by 108 (128 - 20) to
-        // truncate all but the upper 20 bits, and testing if the result is equal to 0.
-        if hash >> 108 == 0 {
-            break;
-        }
-
-        index += 1;
-    }
+    // Create a parallel iterator that loops over every possible u32 integer.
+    let index = (0..u32::MAX)
+        .into_par_iter()
+        // The first index whose hash starts with five hexadecimal zeroes is overwhelmingly likely
+        // to be found very early on in the space of all u32 integers. By using exponential blocks,
+        // threads will focus heavily on the first integers. Without this, the parallelization is
+        // unlikely to provide any advantage as all threads beyond the first one will start
+        // searching beyond the first index with a valid hash.
+        .by_exponential_blocks()
+        .find_first(|index| {
+            let mut hash_input = input.to_string();
+            hash_input.push_str(&index.to_string());
+            let hash = md5(&hash_input);
+            // Checking if the first 5 hexadecimal digits are 0 is equivalent to checking if the
+            // first 20 binary digits are 0. This can be easily tested by right-shifting by 108
+            // (128 - 20) to truncate all but the upper 20 bits, and testing if the result is equal
+            // to 0.
+            hash >> 108 == 0
+        })
+        .expect("Should have found an index that produces a hash starting with five zeroes");
 
     Solution::U32(index)
 }
 
 fn solve_2(input: &str) -> Solution {
-    let mut index = 0;
-    loop {
-        let mut hash_input = input.to_string();
-        hash_input.push_str(&index.to_string());
-        let hash = md5(&hash_input);
-        if hash >> 104 == 0 {
-            break;
-        }
-
-        index += 1;
-    }
+    let index = (0..u32::MAX)
+        .into_par_iter()
+        .by_exponential_blocks()
+        .find_first(|index| {
+            let mut hash_input = input.to_string();
+            hash_input.push_str(&index.to_string());
+            let hash = md5(&hash_input);
+            hash >> 104 == 0
+        })
+        .expect("Should have found an index that produces a hash starting with six zeroes");
 
     Solution::U32(index)
 }
@@ -195,12 +201,10 @@ pub fn md5(input: &str) -> u128 {
 mod test {
     use super::*;
 
-    #[ignore = "Finding the correct hashes takes several seconds in debug mode"]
     #[test]
     fn example1_1() {
         assert_eq!(solve_1("abcdef"), Solution::U32(609_043));
     }
-    #[ignore = "Finding the correct hashes takes several seconds in debug mode"]
     #[test]
     fn example1_2() {
         assert_eq!(solve_1("pqrstuv"), Solution::U32(1_048_970));
