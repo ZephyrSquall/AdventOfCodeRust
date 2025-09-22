@@ -5,7 +5,7 @@ pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2016,
     day: 7,
     title: "Internet Protocol Version 7",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
@@ -53,7 +53,75 @@ fn solve_1(input: &str) -> Solution {
         }
     }
 
-    Solution::U8(ip_supporting_tls_count)
+    Solution::U16(ip_supporting_tls_count)
+}
+
+fn solve_2(input: &str) -> Solution {
+    let mut ip_supporting_ssl_count = 0;
+
+    for line in input.lines() {
+        let mut in_hypernet_sequence = false;
+        // ABAs are found outside hypernet sequences, BABs are found inside hypernet sequences.
+        let mut abas = Vec::new();
+        let mut babs = Vec::new();
+        let mut prev_chars = VecDeque::with_capacity(3);
+
+        for char in line.chars() {
+            if matches!(char, '[' | ']') {
+                prev_chars.clear();
+                in_hypernet_sequence = !in_hypernet_sequence;
+            } else {
+                if prev_chars.len() == 3 {
+                    prev_chars.pop_front();
+                }
+                prev_chars.push_back(char);
+
+                // If there are three previous characters, check if they form an ABA.
+                if prev_chars.len() == 3
+                    && prev_chars[0] == prev_chars[2]
+                    && prev_chars[0] != prev_chars[1]
+                {
+                    let new_aba = Aba {
+                        first_char: prev_chars[0],
+                        second_char: prev_chars[1],
+                    };
+
+                    // Check if this new ABA corresponds to any previously found BAB. If in a
+                    // hypernet sequence, this "new ABA" is actually a "new BAB", so instead check
+                    // if it corresponds to any previously found ABA. If any correspondence is
+                    // found, then this IP supports SSL, so add 1 to the count and continue to the
+                    // next IP.
+                    if in_hypernet_sequence {
+                        if abas.iter().any(|aba| new_aba.corresponds(aba)) {
+                            ip_supporting_ssl_count += 1;
+                            break;
+                        }
+                        babs.push(new_aba);
+                    } else {
+                        if babs.iter().any(|bab| new_aba.corresponds(bab)) {
+                            ip_supporting_ssl_count += 1;
+                            break;
+                        }
+                        abas.push(new_aba);
+                    }
+                }
+            }
+        }
+    }
+
+    Solution::U16(ip_supporting_ssl_count)
+}
+
+struct Aba {
+    first_char: char,
+    second_char: char,
+}
+
+impl Aba {
+    // Returns true if other is the corresponding BAB to this ABA.
+    fn corresponds(&self, other: &Aba) -> bool {
+        self.first_char == other.second_char && self.second_char == other.first_char
+    }
 }
 
 #[cfg(test)]
@@ -75,5 +143,22 @@ mod test {
     #[test]
     fn example1_4() {
         assert_eq!(solve_1("ioxxoj[asdfgh]zxcvbn"), Solution::U8(1));
+    }
+
+    #[test]
+    fn example2_1() {
+        assert_eq!(solve_2("aba[bab]xyz"), Solution::U8(1));
+    }
+    #[test]
+    fn example2_2() {
+        assert_eq!(solve_2("xyx[xyx]xyx"), Solution::U8(0));
+    }
+    #[test]
+    fn example2_3() {
+        assert_eq!(solve_2("aaa[kek]eke"), Solution::U8(1));
+    }
+    #[test]
+    fn example2_4() {
+        assert_eq!(solve_2("zazbz[bzb]cdb"), Solution::U8(1));
     }
 }
