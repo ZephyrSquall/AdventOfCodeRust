@@ -1,4 +1,4 @@
-use crate::solver::{Solution, AdventOfCode};
+use crate::solver::{AdventOfCode, Solution};
 use itertools::Itertools;
 
 pub const SOLVER: AdventOfCode = AdventOfCode {
@@ -62,12 +62,11 @@ fn solve_2(input: &str) -> Solution {
 
         let mut char_iter = characters.iter().multipeek();
         while let Some(character) = char_iter.next() {
-            if let Some(_middle_character) = char_iter.peek() {
-                if let Some(character_after_any) = char_iter.peek() {
-                    if character == *character_after_any {
-                        has_repeat_after_any = true;
-                    }
-                }
+            if let Some(_middle_character) = char_iter.peek()
+                && let Some(character_after_any) = char_iter.peek()
+                && character == *character_after_any
+            {
+                has_repeat_after_any = true;
             }
         }
 

@@ -1,4 +1,4 @@
-use crate::solver::{Solution, AdventOfCode};
+use crate::solver::{AdventOfCode, Solution};
 use std::cmp::min;
 
 // Temporarily allow dead code, as this solver had to be disabled for now to prevent stack overflows
@@ -472,10 +472,10 @@ fn solve_2(input: &str) -> Solution {
     let mut tiles_with_correct_at_end_score = 1;
     for maze_line in maze {
         for tile in maze_line {
-            if let Tile::Empty(tile_minimum_scores) = tile {
-                if tile_minimum_scores.at_end == minimum_score {
-                    tiles_with_correct_at_end_score += 1;
-                }
+            if let Tile::Empty(tile_minimum_scores) = tile
+                && tile_minimum_scores.at_end == minimum_score
+            {
+                tiles_with_correct_at_end_score += 1;
             }
         }
     }

@@ -1,6 +1,6 @@
 use rustc_hash::FxHashSet;
 
-use crate::solver::{Solution, AdventOfCode};
+use crate::solver::{AdventOfCode, Solution};
 
 pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2015,
@@ -29,7 +29,7 @@ struct Edge<'a, 'b> {
     distance: u32,
 }
 
-fn get_graph(input: &str) -> (FxHashSet<&str>, Vec<Edge>) {
+fn get_graph(input: &str) -> (FxHashSet<&str>, Vec<Edge<'_, '_>>) {
     // Using a hash set for nodes ensures that it only contains each location once, even if the same
     // location is inserted multiple times.
     let mut nodes = FxHashSet::default();

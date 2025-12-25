@@ -1,4 +1,4 @@
-use crate::solver::{Solution, AdventOfCode};
+use crate::solver::{AdventOfCode, Solution};
 use rustc_hash::FxHashMap;
 
 pub const SOLVER: AdventOfCode = AdventOfCode {
@@ -107,7 +107,7 @@ fn get_all_rotations_and_flips(pattern: &str) -> [String; 7] {
 // grid". If the original grid's size is divisible by 2, then the base grids will have size 2,
 // otherwise the base grids will have size 3.
 fn get_divided_grid(grid: &[Vec<bool>]) -> Vec<Vec<Vec<Vec<bool>>>> {
-    let base_grid_size = if grid.len() % 2 == 0 { 2 } else { 3 };
+    let base_grid_size = if grid.len().is_multiple_of(2) { 2 } else { 3 };
     let mut divided_grid = Vec::new();
 
     // Iterate over 2 or 3 lines at a time (depending on base_grid_size).

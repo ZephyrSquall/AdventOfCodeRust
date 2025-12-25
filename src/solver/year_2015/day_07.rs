@@ -1,4 +1,4 @@
-use crate::solver::{Solution, AdventOfCode};
+use crate::solver::{AdventOfCode, Solution};
 use rustc_hash::FxHashMap;
 
 pub const SOLVER: AdventOfCode = AdventOfCode {
@@ -67,7 +67,7 @@ impl<'a> ValueOrIdentifier<'a> {
     }
     // Attempts to get the value. If unsuccessful (is an Identifier which hasn't yet been given a
     // value in the wires hash map), returns None.
-    fn get_value<'b>(&'b self, wires: &'b FxHashMap<&str, u16>) -> Option<&u16> {
+    fn get_value<'b>(&'b self, wires: &'b FxHashMap<&str, u16>) -> Option<&'b u16> {
         match self {
             ValueOrIdentifier::Value(value) => Some(value),
             ValueOrIdentifier::Identifier(identifier) => wires.get(identifier),
@@ -83,7 +83,7 @@ enum Gate<'a, 'b, 'c> {
     LShift(ValueOrIdentifier<'a>, ValueOrIdentifier<'b>, &'c str),
     RShift(ValueOrIdentifier<'a>, ValueOrIdentifier<'b>, &'c str),
 }
-impl<'a, 'b, 'c> Gate<'a, 'b, 'c> {
+impl<'c> Gate<'_, '_, 'c> {
     // Attempts to execute the operation of the gate on its arguments. If at least one argument is
     // an identifier that doesn't yet have a value in the wires hash map, the execution fails and
     // this method returns false. Otherwise, the operation is carried out, the result is stored in
@@ -158,7 +158,7 @@ impl<'a, 'b, 'c> Gate<'a, 'b, 'c> {
     }
 }
 
-fn get_gates(input: &str) -> Vec<Gate> {
+fn get_gates(input: &str) -> Vec<Gate<'_, '_, '_>> {
     let mut gates = Vec::new();
 
     for line in input.lines() {

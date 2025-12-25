@@ -1,4 +1,4 @@
-use crate::solver::{Solution, AdventOfCode};
+use crate::solver::{AdventOfCode, Solution};
 use std::{collections::VecDeque, iter};
 
 pub const SOLVER: AdventOfCode = AdventOfCode {
@@ -12,10 +12,10 @@ fn solve_1(input: &str) -> Solution {
     // The following set of four functions extend the grid as needed so it represents an infinite
     // grid.
     fn extend_up(grid: &mut VecDeque<VecDeque<bool>>) {
-        grid.push_front(iter::repeat(false).take(grid[0].len()).collect());
+        grid.push_front(iter::repeat_n(false, grid[0].len()).collect());
     }
     fn extend_down(grid: &mut VecDeque<VecDeque<bool>>) {
-        grid.push_back(iter::repeat(false).take(grid[0].len()).collect());
+        grid.push_back(iter::repeat_n(false, grid[0].len()).collect());
     }
     fn extend_right(grid: &mut VecDeque<VecDeque<bool>>) {
         for grid_line in grid {
@@ -128,10 +128,10 @@ fn solve_2(input: &str) -> Solution {
     // The following set of four functions extend the grid as needed so it represents an infinite
     // grid.
     fn extend_up(grid: &mut VecDeque<VecDeque<Node>>) {
-        grid.push_front(iter::repeat(Node::Clean).take(grid[0].len()).collect());
+        grid.push_front(iter::repeat_n(Node::Clean, grid[0].len()).collect());
     }
     fn extend_down(grid: &mut VecDeque<VecDeque<Node>>) {
-        grid.push_back(iter::repeat(Node::Clean).take(grid[0].len()).collect());
+        grid.push_back(iter::repeat_n(Node::Clean, grid[0].len()).collect());
     }
     fn extend_right(grid: &mut VecDeque<VecDeque<Node>>) {
         for grid_line in grid {

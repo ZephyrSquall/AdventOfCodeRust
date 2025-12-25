@@ -1,4 +1,4 @@
-use crate::solver::{Solution, AdventOfCode};
+use crate::solver::{AdventOfCode, Solution};
 use itertools::Itertools;
 use rustc_hash::FxHashSet;
 
@@ -43,7 +43,7 @@ struct Relationship<'a, 'b> {
     happiness: i32,
 }
 
-fn get_attendees_and_relationships(input: &str) -> (FxHashSet<&str>, Vec<Relationship>) {
+fn get_attendees_and_relationships(input: &str) -> (FxHashSet<&str>, Vec<Relationship<'_, '_>>) {
     let mut attendees = FxHashSet::default();
     let mut relationships = Vec::new();
 

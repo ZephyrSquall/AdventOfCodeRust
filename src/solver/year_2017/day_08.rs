@@ -1,4 +1,4 @@
-use crate::solver::{Solution, AdventOfCode};
+use crate::solver::{AdventOfCode, Solution};
 use rustc_hash::FxHashMap;
 
 pub const SOLVER: AdventOfCode = AdventOfCode {
@@ -88,7 +88,7 @@ struct Instruction<'a> {
     condition_amount: i32,
 }
 
-fn get_instruction(line: &str) -> Instruction {
+fn get_instruction(line: &str) -> Instruction<'_> {
     let mut iter = line.split_whitespace();
     let operation_register = iter.next().expect("Missing value");
     let operation = match iter.next() {

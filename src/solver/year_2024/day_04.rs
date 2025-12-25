@@ -1,4 +1,4 @@
-use crate::solver::{Solution, AdventOfCode};
+use crate::solver::{AdventOfCode, Solution};
 
 pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2024,
@@ -122,9 +122,6 @@ fn solve_2(input: &str) -> Solution {
                 let mut m_count = 0;
                 let mut s_count = 0;
 
-                // Clippy is unable to determine that that proper checks are in place to make sure
-                // accessing these indexes don't panic.
-                #[allow(clippy::match_on_vec_items)]
                 match letters[y - 1][x - 1] {
                     'M' => m_count += 1,
                     'S' => s_count += 1,
@@ -132,19 +129,16 @@ fn solve_2(input: &str) -> Solution {
                     // so skip to the next letter.
                     _ => continue,
                 }
-                #[allow(clippy::match_on_vec_items)]
                 match letters[y - 1][x + 1] {
                     'M' => m_count += 1,
                     'S' => s_count += 1,
                     _ => continue,
                 }
-                #[allow(clippy::match_on_vec_items)]
                 match letters[y + 1][x - 1] {
                     'M' => m_count += 1,
                     'S' => s_count += 1,
                     _ => continue,
                 }
-                #[allow(clippy::match_on_vec_items)]
                 match letters[y + 1][x + 1] {
                     'M' => m_count += 1,
                     'S' => s_count += 1,

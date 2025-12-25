@@ -1,4 +1,4 @@
-use crate::solver::{Solution, AdventOfCode};
+use crate::solver::{AdventOfCode, Solution};
 use std::str::SplitWhitespace;
 
 pub const SOLVER: AdventOfCode = AdventOfCode {
@@ -79,7 +79,7 @@ fn solve_2(input: &str) -> Solution {
         // "..=" which includes the end instead of a normal range ".." which excludes the end).
         #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
         for test in 2..=(f64::from(x)).sqrt() as u32 {
-            if x % test == 0 {
+            if x.is_multiple_of(test) {
                 return false;
             }
         }
@@ -160,7 +160,7 @@ fn solve_2(input: &str) -> Solution {
         }
     }
 
-    return Solution::U32(composites);
+    Solution::U32(composites)
 }
 
 struct ProgramState {
@@ -252,7 +252,8 @@ fn get_instructions(input: &str) -> Vec<Instruction> {
     // Helper function to extract an operand.
     fn get_operand(iter: &mut SplitWhitespace) -> RegisterOrValue {
         let op = iter.next().expect("Line should have third value");
-        let register_or_value = if let Ok(value) = op.parse() {
+
+        if let Ok(value) = op.parse() {
             RegisterOrValue::Value(value)
         } else {
             let mut index = op
@@ -265,9 +266,7 @@ fn get_instructions(input: &str) -> Vec<Instruction> {
             index -= 97;
 
             RegisterOrValue::Register(index)
-        };
-
-        register_or_value
+        }
     }
 
     let mut instructions = Vec::new();

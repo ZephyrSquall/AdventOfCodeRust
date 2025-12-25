@@ -1,4 +1,4 @@
-use crate::solver::{Solution, AdventOfCode};
+use crate::solver::{AdventOfCode, Solution};
 use rustc_hash::FxHashMap;
 use std::{cell::RefCell, collections::VecDeque, rc::Rc, str::SplitWhitespace};
 
@@ -275,7 +275,8 @@ fn get_instructions(input: &str) -> Vec<Instruction> {
     // Helper function to extract an operand.
     fn get_operand(iter: &mut SplitWhitespace) -> RegisterOrValue {
         let op = iter.next().expect("Line should have third value");
-        let register_or_value = if let Ok(value) = op.parse() {
+
+        if let Ok(value) = op.parse() {
             RegisterOrValue::Value(value)
         } else {
             let char = op
@@ -283,9 +284,7 @@ fn get_instructions(input: &str) -> Vec<Instruction> {
                 .next()
                 .expect("Operand should be a number or single character");
             RegisterOrValue::Register(char)
-        };
-
-        register_or_value
+        }
     }
 
     let mut instructions = Vec::new();

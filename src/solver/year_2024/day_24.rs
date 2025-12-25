@@ -465,7 +465,7 @@ struct Gate<'a, 'b, 'c> {
     second_wire: &'b str,
     output_wire: &'c str,
 }
-impl<'a, 'b, 'c> Gate<'a, 'b, 'c> {
+impl<'c> Gate<'_, '_, 'c> {
     // Attempts to execute the gate's operation on its input wires. If either of the input wires
     // don't have a value yet, this execution fails. If both input wires have a value, this
     // execution succeeds and the result is written to the output wire. This method returns a bool
@@ -495,7 +495,7 @@ enum GateOperation {
     Xor,
 }
 
-fn get_wire_values_and_gates(input: &str) -> (FxHashMap<&str, bool>, FxHashSet<Gate>) {
+fn get_wire_values_and_gates(input: &str) -> (FxHashMap<&str, bool>, FxHashSet<Gate<'_, '_, '_>>) {
     let mut wire_values = FxHashMap::default();
     let mut gates = FxHashSet::default();
     let mut line_iter = input.lines();

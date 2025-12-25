@@ -1,4 +1,4 @@
-use crate::solver::{Solution, AdventOfCode};
+use crate::solver::{AdventOfCode, Solution};
 use rustc_hash::FxHashMap;
 
 pub const SOLVER: AdventOfCode = AdventOfCode {
@@ -76,7 +76,7 @@ fn solve(input: &str, iterations: usize) -> Solution {
                 } else {
                     let digits = num_digits(value);
                     // Split the stone if it has an even number of digits.
-                    if digits % 2 == 0 {
+                    if digits.is_multiple_of(2) {
                         let (left_stone, right_stone) = split_digits(value, digits);
                         child_values.push(left_stone);
                         child_values.push(right_stone);

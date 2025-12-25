@@ -1,4 +1,4 @@
-use crate::solver::{Solution, AdventOfCode};
+use crate::solver::{AdventOfCode, Solution};
 
 pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2015,
@@ -121,7 +121,7 @@ impl Instruction {
                 *program_counter = program_counter.wrapping_add_signed(*offset);
             }
             Instruction::Jie(register_index, offset) => {
-                if registers[*register_index] % 2 == 0 {
+                if registers[*register_index].is_multiple_of(2) {
                     *program_counter = program_counter.wrapping_add_signed(*offset);
                 } else {
                     *program_counter += 1;

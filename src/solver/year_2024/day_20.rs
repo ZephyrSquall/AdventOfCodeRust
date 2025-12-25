@@ -22,51 +22,51 @@ fn solve_1(input: &str) -> Solution {
     let mut cheats_saving_100_picoseconds = 0;
     for (tile, picoseconds) in &shortest_path_steps {
         // Check up.
-        if tile.y >= 2 && !maze[tile.y - 1][tile.x] {
-            if let Some(other_picoseconds) = shortest_path_steps.get(&Position {
+        if tile.y >= 2
+            && !maze[tile.y - 1][tile.x]
+            && let Some(other_picoseconds) = shortest_path_steps.get(&Position {
                 x: tile.x,
                 y: tile.y - 2,
-            }) {
-                if *other_picoseconds >= *picoseconds + 102 {
-                    cheats_saving_100_picoseconds += 1;
-                }
-            }
+            })
+            && *other_picoseconds >= *picoseconds + 102
+        {
+            cheats_saving_100_picoseconds += 1;
         }
 
         // Check right.
-        if tile.x + 2 < x_len && !maze[tile.y][tile.x + 1] {
-            if let Some(other_picoseconds) = shortest_path_steps.get(&Position {
+        if tile.x + 2 < x_len
+            && !maze[tile.y][tile.x + 1]
+            && let Some(other_picoseconds) = shortest_path_steps.get(&Position {
                 x: tile.x + 2,
                 y: tile.y,
-            }) {
-                if *other_picoseconds >= *picoseconds + 102 {
-                    cheats_saving_100_picoseconds += 1;
-                }
-            }
+            })
+            && *other_picoseconds >= *picoseconds + 102
+        {
+            cheats_saving_100_picoseconds += 1;
         }
 
         // Check down.
-        if tile.y + 2 < y_len && !maze[tile.y + 1][tile.x] {
-            if let Some(other_picoseconds) = shortest_path_steps.get(&Position {
+        if tile.y + 2 < y_len
+            && !maze[tile.y + 1][tile.x]
+            && let Some(other_picoseconds) = shortest_path_steps.get(&Position {
                 x: tile.x,
                 y: tile.y + 2,
-            }) {
-                if *other_picoseconds >= *picoseconds + 102 {
-                    cheats_saving_100_picoseconds += 1;
-                }
-            }
+            })
+            && *other_picoseconds >= *picoseconds + 102
+        {
+            cheats_saving_100_picoseconds += 1;
         }
 
         // Check left.
-        if tile.x >= 2 && !maze[tile.y][tile.x - 1] {
-            if let Some(other_picoseconds) = shortest_path_steps.get(&Position {
+        if tile.x >= 2
+            && !maze[tile.y][tile.x - 1]
+            && let Some(other_picoseconds) = shortest_path_steps.get(&Position {
                 x: tile.x - 2,
                 y: tile.y,
-            }) {
-                if *other_picoseconds >= *picoseconds + 102 {
-                    cheats_saving_100_picoseconds += 1;
-                }
-            }
+            })
+            && *other_picoseconds >= *picoseconds + 102
+        {
+            cheats_saving_100_picoseconds += 1;
         }
     }
 
@@ -137,12 +137,11 @@ fn solve_2(input: &str) -> Solution {
                 let travel_distance = x_offset + y_offset;
 
                 // A travel distance less than 1 cannot possibly skip any walls.
-                if travel_distance > 1 {
-                    if let Some(other_picoseconds) = shortest_path_steps.get(&Position { x, y }) {
-                        if *other_picoseconds >= picoseconds + travel_distance + 100 {
-                            cheats_saving_100_picoseconds += 1;
-                        }
-                    }
+                if travel_distance > 1
+                    && let Some(other_picoseconds) = shortest_path_steps.get(&Position { x, y })
+                    && *other_picoseconds >= picoseconds + travel_distance + 100
+                {
+                    cheats_saving_100_picoseconds += 1;
                 }
             }
         }

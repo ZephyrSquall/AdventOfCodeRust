@@ -1,4 +1,4 @@
-use crate::solver::{Solution, AdventOfCode};
+use crate::solver::{AdventOfCode, Solution};
 use rustc_hash::FxHashSet;
 
 pub const SOLVER: AdventOfCode = AdventOfCode {
@@ -84,7 +84,6 @@ fn solve_1(input: &str) -> Solution {
             let can_robot_move;
             // Due to the buffer the wall provides, the next robot position will always have a valid
             // index.
-            #[allow(clippy::match_on_vec_items)]
             match warehouse[next_robot_position.y][next_robot_position.x] {
                 Tile::Wall => can_robot_move = false,
                 Tile::Empty => can_robot_move = true,
@@ -207,7 +206,6 @@ fn solve_2(input: &str) -> Solution {
             };
 
             let can_robot_move;
-            #[allow(clippy::match_on_vec_items)]
             match warehouse[next_robot_position.y][next_robot_position.x] {
                 Tile::Wall => can_robot_move = false,
                 Tile::Empty => can_robot_move = true,
