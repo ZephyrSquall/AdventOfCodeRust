@@ -4,65 +4,67 @@ pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2025,
     day: 3,
     title: "Lobby",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn solve_1(input: &str) -> Solution {
+    solve(input, 2)
+}
+
+fn solve_2(input: &str) -> Solution {
+    solve(input, 12)
+}
+
+fn solve(input: &str, batteries_to_select: usize) -> Solution {
     let mut total_joltage = 0;
+
     for line in input.lines() {
-        let battery_count = get_battery_iter(line).count();
+        let joltage_ratings = line
+            .chars()
+            .map(|character| {
+                u64::from(
+                    character
+                        .to_digit(10)
+                        .expect("Character should be a number"),
+                )
+            })
+            .collect::<Vec<_>>();
 
-        let (first_battery_index, first_battery_joltage_rating) = get_battery_iter(line)
-            .max_by_key(|(_index, joltage_rating)| *joltage_rating)
-            .expect("Battery iterator should have at least one battery");
+        let mut selected_joltages = Vec::with_capacity(batteries_to_select);
+        // When a battery is selected, the starting index is set to one plus that battery's index,
+        // to ensure the next battery selected comes after it.
+        let mut starting_index = 0;
 
-        // The second battery must be after the first battery, except when the first battery is the
-        // one at the end of the bank, in which case the second battery can be any battery except
-        // the one at the end of the bank.
-        let (second_battery_index, second_battery_joltage_rating) =
-            if first_battery_index == battery_count - 1 {
-                get_battery_iter(line)
-                    .skip(1)
-                    .max_by_key(|(_index, joltage_rating)| *joltage_rating)
-                    .expect("Battery iterator should have at least two batteries")
-            } else {
-                get_battery_iter(line)
-                    .take(battery_count - first_battery_index - 1)
-                    .max_by_key(|(_index, joltage_rating)| *joltage_rating)
-                    .expect("Battery iterator should have at least two batteries")
-            };
+        for remaining_batteries in (0..batteries_to_select).rev() {
+            let (index, joltage_rating) = joltage_ratings
+                .iter()
+                .enumerate()
+                // Do not consider batteries too close to the end such that there would not be
+                // enough batteries left to choose from for all the remaining batteries.
+                .take(joltage_ratings.len() - remaining_batteries)
+                .skip(starting_index)
+                // max_by_key returns the last occurrence of the maximum value. We want the first
+                // occurrence, so reverse the iterator first.
+                .rev()
+                .max_by_key(|(_index, joltage_rating)| *joltage_rating)
+                .expect("Battery iterator should have at least one battery");
 
-        let joltage = if first_battery_index < second_battery_index {
-            concatenate(first_battery_joltage_rating, second_battery_joltage_rating)
-        } else {
-            concatenate(second_battery_joltage_rating, first_battery_joltage_rating)
-        };
-        total_joltage += joltage;
+            selected_joltages.push(joltage_rating);
+            starting_index = index + 1;
+        }
+
+        // Concatenate all the digits of the selected joltages.
+        let output_joltage = selected_joltages
+            .iter()
+            .copied()
+            .copied()
+            .reduce(|acc, digit| acc * 10 + digit)
+            .expect("digits array should not be empty");
+
+        total_joltage += output_joltage;
     }
 
-    Solution::U32(total_joltage)
-}
-
-fn get_battery_iter(line: &str) -> impl Iterator<Item = (usize, u32)> {
-    line.char_indices()
-        .map(|(index, character)| {
-            (
-                index,
-                character
-                    .to_digit(10)
-                    .expect("Each character should be a number"),
-            )
-        })
-        // Reversing the iterator is necessary, as max_by_key() will be called on it, which returns
-        // the position of the last occurrence of the maximum value, but we require the first
-        // occurrence of the maximum value.
-        .rev()
-}
-
-fn concatenate(a: u32, b: u32) -> u32 {
-    // b.ilog10 + 1 gives the number of digits in b. Multiplying a by 10 to the power of this
-    // value will shift a over however many digits is needed to fit b.
-    a * 10_u32.pow(b.ilog10() + 1) + b
+    Solution::U64(total_joltage)
 }
 
 #[cfg(test)]
@@ -80,6 +82,20 @@ mod test {
 818181911112111"
             ),
             Solution::U16(357)
+        );
+    }
+
+    #[test]
+    fn example2_1() {
+        assert_eq!(
+            solve_2(
+                "\
+987654321111111
+811111111111119
+234234234234278
+818181911112111"
+            ),
+            Solution::U64(3_121_910_778_619)
         );
     }
 }
