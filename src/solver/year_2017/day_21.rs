@@ -174,7 +174,7 @@ fn solve(input: &str, iterations: u8) -> Solution {
         // Add the enhancement rule 7 more times, once for every possible variation on its input.
         let rotated_and_flipped_patterns = get_all_rotations_and_flips(input_pattern);
         for rotated_and_flipped_pattern in rotated_and_flipped_patterns {
-            enhancement_rules.insert(rotated_and_flipped_pattern.to_string(), output_pattern);
+            enhancement_rules.insert(rotated_and_flipped_pattern.clone(), output_pattern);
         }
     }
 
