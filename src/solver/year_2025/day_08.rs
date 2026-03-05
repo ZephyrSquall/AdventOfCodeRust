@@ -5,27 +5,22 @@ pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2025,
     day: 8,
     title: "Playground",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
-fn solve_1(input: &str) -> Solution {
-    solve(input, 1000)
+struct Position {
+    x: i64,
+    y: i64,
+    z: i64,
+}
+impl Position {
+    fn distance_square(&self, other: &Position) -> i64 {
+        (self.x - other.x).pow(2) + (self.y - other.y).pow(2) + (self.z - other.z).pow(2)
+    }
 }
 
-fn solve(input: &str, pairs: usize) -> Solution {
-    #[derive(Debug)]
-    struct Position {
-        x: i64,
-        y: i64,
-        z: i64,
-    }
-    impl Position {
-        fn distance_square(&self, other: &Position) -> i64 {
-            (self.x - other.x).pow(2) + (self.y - other.y).pow(2) + (self.z - other.z).pow(2)
-        }
-    }
-
-    let positions = input
+fn get_positions(input: &str) -> Vec<Position> {
+    input
         .lines()
         .map(|line| {
             let mut num_str_iter = line.split(',');
@@ -46,7 +41,15 @@ fn solve(input: &str, pairs: usize) -> Solution {
                 .expect("Third number should be valid");
             Position { x, y, z }
         })
-        .collect::<Vec<_>>();
+        .collect::<Vec<_>>()
+}
+
+fn solve_1(input: &str) -> Solution {
+    solve_1_with_pairs(input, 1000)
+}
+
+fn solve_1_with_pairs(input: &str, pairs: usize) -> Solution {
+    let positions = get_positions(input);
 
     // The Euclidian distance between two points is given by sqrt((x_1 - x_2)^2 + (y_1 - y_2)^2 +
     // (z_1 - z_2)^2). The sqrt operation is problematic because the result might not be a whole
@@ -125,6 +128,105 @@ fn solve(input: &str, pairs: usize) -> Solution {
     Solution::U32(circuit_sizes[0] * circuit_sizes[1] * circuit_sizes[2])
 }
 
+struct Node {
+    parent: usize,
+    // Size counts how many child nodes are under this node.
+    size: u32,
+}
+
+// A Union Find data structure, also known as a Disjoint Set Union, is an efficient way to represent
+// sets of elements which can be merged. This is used to keep track of all distinct circuits that
+// junction boxes are connected in, and merge circuits when junction boxes from two different
+// circuits are connected. Rust has no built-in Union Find data structure, so I manually implement
+// one here.
+struct UnionFind {
+    nodes: Vec<Node>,
+}
+impl UnionFind {
+    fn new(size: usize) -> UnionFind {
+        let nodes = (0..size)
+            .map(|index| Node {
+                parent: index,
+                size: 1,
+            })
+            .collect();
+        UnionFind { nodes }
+    }
+
+    fn find_root(&self, node: usize) -> usize {
+        let parent = self.nodes[node].parent;
+        if node == parent {
+            node
+        } else {
+            self.find_root(parent)
+        }
+    }
+
+    // Merges the sets containing the specified nodes, then returns the size of the combined set.
+    fn merge(&mut self, node_a: usize, node_b: usize) -> u32 {
+        let root_a = self.find_root(node_a);
+        let root_b = self.find_root(node_b);
+
+        let size_a = self.nodes[root_a].size;
+        let size_b = self.nodes[root_b].size;
+
+        if root_a == root_b {
+            return size_a;
+        }
+
+        // Making the root node with fewer descendants become a child of the root node with more
+        // descendants helps maintain a flatter tree structure, reducing how many levels of
+        // recursion are needed to find the root node.
+        if size_a > size_b {
+            self.nodes[root_b].parent = node_a;
+            self.nodes[root_a].size = size_a + size_b;
+        } else {
+            self.nodes[root_a].parent = node_b;
+            self.nodes[root_b].size = size_a + size_b;
+        }
+
+        size_a + size_b
+    }
+}
+
+fn solve_2(input: &str) -> Solution {
+    let positions = get_positions(input);
+
+    // This time, we want all distance squares, as we can't know ahead of time how many pairs we
+    // have to iterate over to connect everything. So unlike part 1, don't filter distance squares
+    // after getting 1000 of them.
+    let mut distance_squares = BTreeMap::new();
+    let mut positions_iter = positions.iter().enumerate();
+
+    while let Some((index, position)) = positions_iter.next() {
+        let other_positions_iter = positions_iter.clone();
+
+        for (other_index, other_position) in other_positions_iter {
+            let distance_square = position.distance_square(other_position);
+
+            distance_squares.insert(distance_square, (index, other_index));
+        }
+    }
+
+    // Use the Union Find data structure to keep track of each individual circuit, merging them each
+    // time the next closest pair of junction boxes get connected. Check the size of the new circuit
+    // after each merge. If it is the same value as the total number of junction boxes, then this
+    // last connection formed a single circuit containing every junction box.
+    let full_size = positions.len();
+    let mut union_find = UnionFind::new(full_size);
+
+    for edge in distance_squares.values() {
+        let size = union_find.merge(edge.0, edge.1);
+        if size as usize == full_size {
+            return Solution::I64(positions[edge.0].x * positions[edge.1].x);
+        }
+    }
+
+    panic!(
+        "A circuit containing every junction box should have been created before iterating over every pair of junction boxes"
+    )
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -132,7 +234,7 @@ mod test {
     #[test]
     fn example1_1() {
         assert_eq!(
-            solve(
+            solve_1_with_pairs(
                 "\
 162,817,812
 57,618,57
@@ -157,6 +259,36 @@ mod test {
                 10
             ),
             Solution::U8(40)
+        );
+    }
+
+    #[test]
+    fn example2_1() {
+        assert_eq!(
+            solve_2(
+                "\
+162,817,812
+57,618,57
+906,360,560
+592,479,940
+352,342,300
+466,668,158
+542,29,236
+431,825,988
+739,650,466
+52,470,668
+216,146,977
+819,987,18
+117,168,530
+805,96,715
+346,949,466
+970,615,88
+941,993,340
+862,61,35
+984,92,344
+425,690,689"
+            ),
+            Solution::U16(25272)
         );
     }
 }
