@@ -45,7 +45,8 @@ pub mod year_2017;
 pub mod year_2024;
 pub mod year_2025;
 
-pub const SOLVERS: [AdventOfCode; 89] = [
+pub const SOLVERS: [AdventOfCode; 90] = [
+    year_2025::day_09::SOLVER,
     year_2025::day_08::SOLVER,
     year_2025::day_07::SOLVER,
     year_2025::day_06::SOLVER,
