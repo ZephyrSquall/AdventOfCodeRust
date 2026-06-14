@@ -1,6 +1,5 @@
-use std::collections::VecDeque;
-
 use crate::solver::{AdventOfCode, Solution};
+use std::collections::VecDeque;
 
 pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2023,
