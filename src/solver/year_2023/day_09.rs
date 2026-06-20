@@ -4,7 +4,7 @@ pub const SOLVER: AdventOfCode = AdventOfCode {
     year: 2023,
     day: 9,
     title: "Mirage Maintenance",
-    part_solvers: &[solve_1],
+    part_solvers: &[solve_1, solve_2],
 };
 
 fn predict_next(values: &[i32]) -> i32 {
@@ -41,6 +41,24 @@ fn solve_1(input: &str) -> Solution {
     Solution::I32(extrapolated_value_sum)
 }
 
+fn solve_2(input: &str) -> Solution {
+    let extrapolated_value_sum = input.lines().fold(0, |acc, e| {
+        let values = e
+            .split(' ')
+            .rev()
+            .map(|value_str| {
+                value_str
+                    .parse()
+                    .expect("Value string should be a valid number")
+            })
+            .collect::<Vec<_>>();
+
+        acc + predict_next(&values)
+    });
+
+    Solution::I32(extrapolated_value_sum)
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -55,6 +73,19 @@ mod test {
 10 13 16 21 30 45"
             ),
             Solution::U8(114)
+        );
+    }
+
+    #[test]
+    fn example2_1() {
+        assert_eq!(
+            solve_2(
+                "\
+0 3 6 9 12 15
+1 3 6 10 15 21
+10 13 16 21 30 45"
+            ),
+            Solution::U8(2)
         );
     }
 }
